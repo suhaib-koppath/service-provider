@@ -109,18 +109,18 @@ function makeSeedData() {
       { id: 'CMS-03', section: 'Footer contact', title: 'Get in touch', body: 'hello@namma.example · +91 422 400 0123', image: '', enabled: true },
       { id: 'CMS-04', section: 'FAQ', title: 'How do I find a service provider?', body: 'Search for the service you need, filter by location or price, and explore local provider profiles.', enabled: true },
       { id: 'CMS-05', section: 'FAQ', title: 'How do I book a service?', body: 'There is no in-app booking at this time. Contact the provider directly to discuss the job, availability, pricing, and arrangements.', enabled: true },
-      { id: 'CMS-06', section: 'Testimonial', title: 'Priya S. | Coimbatore', body: 'Finding a reliable electrician used to take half a day of asking around. Namma made it three clicks.', enabled: true },
+      { id: 'CMS-06', section: 'Testimonial', title: 'Priya S. | Coimbatore', body: 'Finding a reliable electrician used to take half a day of asking around. Thumbly.in made it three clicks.', enabled: true },
       { id: 'CMS-07', section: 'Testimonial', title: 'Ramesh K. | Pollachi', body: 'Our coconut harvest was sorted in an afternoon. Such a relief to find skilled local people nearby.', enabled: true },
       { id: 'CMS-08', section: 'Testimonial', title: 'Divya M. | Tiruppur', body: 'A genuinely lovely home-cooked lunch for our family gathering. I’ve already recommended the caterer.', enabled: true },
     ],
     admins: [
-      { id: 'ADM-001', fullName: 'Namma Admin', email: 'admin@namma.demo', role: 'Admin', status: 'Active', lastLogin: 'Today' },
+      { id: 'ADM-001', fullName: 'Thumbly.in Admin', email: 'admin@namma.demo', role: 'Admin', status: 'Active', lastLogin: 'Today' },
     ],
     settings: [
-      { id: 'SETTINGS-01', businessName: 'Namma', supportEmail: 'hello@namma.example', supportPhone: '+91 422 400 0123', officeAddress: 'Coimbatore, Tamil Nadu, India', currency: 'INR (₹)', timezone: 'Asia/Kolkata', notifications: true, twoFactorEnabled: false },
+      { id: 'SETTINGS-01', businessName: 'Thumbly.in', supportEmail: 'hello@namma.example', supportPhone: '+91 422 400 0123', officeAddress: 'Coimbatore, Tamil Nadu, India', currency: 'INR (₹)', timezone: 'Asia/Kolkata', notifications: true, twoFactorEnabled: false },
     ],
     activityLogs: [
-      { id: 'LOG-01', action: 'Dashboard opened', actor: 'Namma Admin', date: new Date().toISOString() },
+      { id: 'LOG-01', action: 'Dashboard opened', actor: 'Thumbly.in Admin', date: new Date().toISOString() },
     ],
   }
 }
@@ -229,7 +229,7 @@ export function getPublicCatalog(database = getAdminDemoData()) {
 
 export const makeDemoId = (prefix, value = '') => `${prefix}-${slugify(value) || 'item'}-${Date.now().toString(36)}`
 
-export const addActivity = (database, action, actor = 'Namma Admin') => ({
+export const addActivity = (database, action, actor = 'Thumbly.in Admin') => ({
   ...database,
   activityLogs: [
     { id: makeDemoId('LOG', action), action, actor, date: new Date().toISOString() },

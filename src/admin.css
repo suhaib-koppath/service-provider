@@ -13,6 +13,7 @@
   font-family: var(--font-site);
   font-size: 13px;
 }
+
 .admin-app *, .admin-login-page * { box-sizing: border-box; }
 .admin-app button, .admin-login-page button, .admin-app input, .admin-app textarea, .admin-app select, .admin-login-page input { font: inherit; }
 .admin-app button, .admin-app a, .admin-login-page button, .admin-login-page a { -webkit-tap-highlight-color: transparent; }

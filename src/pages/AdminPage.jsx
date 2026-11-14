@@ -215,7 +215,7 @@ function AdminLoginPage() {
   return (
     <main className="admin-login-page">
       <div className="admin-login-card">
-        <Link className="admin-login-brand" to="/home"><span className="admin-brand-mark">n</span> namma <span> / ADMIN</span></Link>
+        <Link className="admin-login-brand" to="/home"><span className="admin-brand-mark">t</span> Thumbly.in <span> / ADMIN</span></Link>
         <div className="admin-login-icon">▦</div>
         <p className="admin-eyebrow">MARKETPLACE CONTROL ROOM</p>
         <h1>Administrator sign in</h1>
@@ -256,7 +256,7 @@ function AdminLayout() {
     <div className="admin-app">
       {mobileSidebar && <button className="admin-mobile-shade" type="button" aria-label="Close menu" onClick={() => setMobileSidebar(false)} />}
       <aside className={`admin-sidebar${mobileSidebar ? ' is-open' : ''}`}>
-        <Link to="/admin" className="admin-brand"><span className="admin-brand-mark">n</span><span>namma<small>ADMIN CONSOLE</small></span></Link>
+        <Link to="/admin" className="admin-brand"><span className="admin-brand-mark">t</span><span>Thumbly.in<small>ADMIN CONSOLE</small></span></Link>
         <p className="admin-nav-label">WORKSPACE</p>
         <nav aria-label="Admin navigation">
           {navigation.map((item) => (

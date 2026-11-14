@@ -1,4 +1,4 @@
-# Namma — Local Services Marketplace
+# Thumbly.in — Local Services Marketplace
 
 A responsive React and Tailwind CSS app with a local-services marketplace and the existing splash, login, registration, and password-reset screens.
 

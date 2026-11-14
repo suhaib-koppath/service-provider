@@ -43,9 +43,9 @@ function MarketplaceLayout({ children }) {
     <div className="marketplace">
       <header className="market-header">
         <div className="market-header-inner">
-          <Link className="market-brand" to="/home" aria-label="Namma home">
-            <span className="brand-mark">n</span>
-            <span>namma<span className="brand-period">.</span></span>
+          <Link className="market-brand" to="/home" aria-label="Thumbly.in home">
+            <span className="brand-mark">t</span>
+            <span>Thumbly.in</span>
           </Link>
           <button
             className="menu-toggle"
@@ -115,7 +115,7 @@ function MarketplaceLayout({ children }) {
         <div className="footer-main">
           <div className="footer-about">
             <Link className="market-brand footer-brand" to="/home">
-              <span className="brand-mark">n</span><span>namma<span className="brand-period">.</span></span>
+              <span className="brand-mark">t</span><span>Thumbly.in</span>
             </Link>
             <p>Your neighborhood, a little more helpful. Find trusted local people to get life’s everyday jobs done.</p>
             <div className="footer-socials" aria-label="Social media">
@@ -146,7 +146,7 @@ function MarketplaceLayout({ children }) {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} Namma. Made for the neighborhood.</span>
+          <span>© {new Date().getFullYear()} Thumbly.in. Made for the neighborhood.</span>
           <span>Thoughtfully connecting local communities.</span>
         </div>
       </footer>
