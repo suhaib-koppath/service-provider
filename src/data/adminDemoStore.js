@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { categories as seedCategories, services as seedServices } from './services.js'
+import { services as seedServices } from './services.js'
 
 const STORAGE_KEY = 'namma.admin.demo.database.v1'
 const CHANGE_EVENT = 'namma:admin-demo-database-change'
@@ -8,16 +8,6 @@ let snapshot
 const slugify = (value) => String(value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 function makeSeedData() {
-  const categories = seedCategories.map((category, index) => ({
-    id: slugify(category.category),
-    name: category.category,
-    description: `Local ${category.category.toLowerCase()} services.`,
-    image: category.image,
-    icon: category.icon,
-    displayOrder: index + 1,
-    enabled: true,
-  }))
-
   const providersByName = new Map()
   seedServices.forEach((service, index) => {
     const key = slugify(service.provider.name)
@@ -27,7 +17,6 @@ function makeSeedData() {
         fullName: service.provider.name,
         phone: service.provider.phone,
         email: `${key}@example.demo`,
-        categoryId: slugify(service.category),
         skills: service.name,
         experience: service.provider.experience,
         location: service.provider.area,
@@ -42,22 +31,9 @@ function makeSeedData() {
     }
   })
 
-  const subcategories = seedServices.map((service) => ({
-    id: service.slug,
-    categoryId: slugify(service.category),
-    name: service.name,
-    description: service.description,
-    image: service.image,
-    startingPrice: service.price,
-    duration: '1–2 hours',
-    enabled: true,
-  }))
-
-  const services = seedServices.map((service, index) => ({
+  const services = seedServices.map((service) => ({
     id: service.slug,
     title: service.name,
-    categoryId: slugify(service.category),
-    subcategoryId: service.slug,
     description: service.description,
     images: service.image,
     startingPrice: service.price,
@@ -67,26 +43,23 @@ function makeSeedData() {
     requirements: 'Discuss the work with the provider before confirming.',
     providerId: slugify(service.provider.name),
     enabled: true,
-    featured: index < 6,
     rating: service.rating,
     reviewCount: service.reviews,
   }))
 
   return {
-    categories,
-    subcategories,
     services,
     employees: [
-      { id: 'emp-1001', employeeId: 'EMP-1001', fullName: 'Karthik R.', phone: '+91 98430 55001', email: 'karthik@example.demo', address: 'Saibaba Colony, Coimbatore', gender: 'Male', experience: '7 years', skills: 'Electrical repairs, wiring', categoryIds: 'Home Maintenance', subcategoryIds: 'Electrician', location: 'Coimbatore', availability: 'Available', joiningDate: '2024-06-18', status: 'Active', profileImage: '' },
-      { id: 'emp-1002', employeeId: 'EMP-1002', fullName: 'Meena S.', phone: '+91 98430 55002', email: 'meena@example.demo', address: 'Pollachi', gender: 'Female', experience: '5 years', skills: 'Deep cleaning, home cleaning', categoryIds: 'Cleaning Services', subcategoryIds: 'House Cleaning, Deep Cleaning', location: 'Pollachi', availability: 'Available', joiningDate: '2025-01-08', status: 'Active', profileImage: '' },
+      { id: 'emp-1001', employeeId: 'EMP-1001', fullName: 'Karthik R.', phone: '+91 98430 55001', email: 'karthik@example.demo', address: 'Saibaba Colony, Coimbatore', gender: 'Male', experience: '7 years', skills: 'Electrical repairs, wiring', location: 'Coimbatore', availability: 'Available', joiningDate: '2024-06-18', status: 'Active', profileImage: '' },
+      { id: 'emp-1002', employeeId: 'EMP-1002', fullName: 'Meena S.', phone: '+91 98430 55002', email: 'meena@example.demo', address: 'Pollachi', gender: 'Female', experience: '5 years', skills: 'Deep cleaning, home cleaning', location: 'Pollachi', availability: 'Available', joiningDate: '2025-01-08', status: 'Active', profileImage: '' },
     ],
     providers: [...providersByName.values()],
     bookings: [
-      { id: 'BK-24081', customerName: 'Priya S.', customerPhone: '+91 98430 10001', serviceId: 'electrician', serviceTitle: 'Electrician', categoryId: 'home-maintenance', providerId: 'arun-kumar', providerName: 'Arun Kumar', date: '2026-11-14', time: '10:30 AM', location: 'Coimbatore', status: 'Pending', amount: 650, paymentStatus: 'Unpaid' },
-      { id: 'BK-24080', customerName: 'Ramesh K.', customerPhone: '+91 98430 10002', serviceId: 'coconut-tree-climbing', serviceTitle: 'Coconut Tree Climbing', categoryId: 'agriculture-outdoor', providerId: 'meena-services', providerName: 'Meena Services', employeeId: 'emp-1001', date: '2026-11-13', time: '08:00 AM', location: 'Pollachi', status: 'In Progress', amount: 1200, paymentStatus: 'Paid' },
-      { id: 'BK-24079', customerName: 'Divya M.', customerPhone: '+91 98430 10003', serviceId: 'homemade-food', serviceTitle: 'Homemade Food', categoryId: 'food-services', providerId: 'anu-s-kitchen', providerName: 'Anu’s Kitchen', date: '2026-11-12', time: '12:00 PM', location: 'Tiruppur', status: 'Completed', amount: 950, paymentStatus: 'Paid' },
-      { id: 'BK-24078', customerName: 'Arun P.', customerPhone: '+91 98430 10004', serviceId: 'plumber', serviceTitle: 'Plumber', categoryId: 'home-maintenance', providerId: 'karthik-works', providerName: 'Karthik Works', date: '2026-11-15', time: '02:00 PM', location: 'Coimbatore', status: 'Confirmed', amount: 500, paymentStatus: 'Unpaid' },
-      { id: 'BK-24077', customerName: 'Nila R.', customerPhone: '+91 98430 10005', serviceId: 'house-cleaning', serviceTitle: 'House Cleaning', categoryId: 'cleaning-services', providerId: 'meena-services', providerName: 'Meena Services', date: '2026-11-10', time: '09:00 AM', location: 'Pollachi', status: 'Completed', amount: 850, paymentStatus: 'Paid' },
+      { id: 'BK-24081', customerName: 'Priya S.', customerPhone: '+91 98430 10001', serviceId: 'electrician', serviceTitle: 'Electrician', providerId: 'arun-kumar', providerName: 'Arun Kumar', date: '2026-11-14', time: '10:30 AM', location: 'Coimbatore', status: 'Pending', amount: 650, paymentStatus: 'Unpaid' },
+      { id: 'BK-24080', customerName: 'Ramesh K.', customerPhone: '+91 98430 10002', serviceId: 'coconut-tree-climbing', serviceTitle: 'Coconut Tree Climbing', providerId: 'meena-services', providerName: 'Meena Services', employeeId: 'emp-1001', date: '2026-11-13', time: '08:00 AM', location: 'Pollachi', status: 'In Progress', amount: 1200, paymentStatus: 'Paid' },
+      { id: 'BK-24079', customerName: 'Divya M.', customerPhone: '+91 98430 10003', serviceId: 'homemade-food', serviceTitle: 'Homemade Food', providerId: 'anu-s-kitchen', providerName: 'Anu’s Kitchen', date: '2026-11-12', time: '12:00 PM', location: 'Tiruppur', status: 'Completed', amount: 950, paymentStatus: 'Paid' },
+      { id: 'BK-24078', customerName: 'Arun P.', customerPhone: '+91 98430 10004', serviceId: 'plumber', serviceTitle: 'Plumber', providerId: 'karthik-works', providerName: 'Karthik Works', date: '2026-11-15', time: '02:00 PM', location: 'Coimbatore', status: 'Confirmed', amount: 500, paymentStatus: 'Unpaid' },
+      { id: 'BK-24077', customerName: 'Nila R.', customerPhone: '+91 98430 10005', serviceId: 'house-cleaning', serviceTitle: 'House Cleaning', providerId: 'meena-services', providerName: 'Meena Services', date: '2026-11-10', time: '09:00 AM', location: 'Pollachi', status: 'Completed', amount: 850, paymentStatus: 'Paid' },
     ],
     customers: [
       { id: 'CUS-3001', fullName: 'Priya S.', email: 'priya@example.demo', phone: '+91 98430 10001', location: 'Coimbatore', address: 'Race Course, Coimbatore', joined: '2025-08-12', bookings: 5, status: 'Active' },
@@ -170,43 +143,20 @@ export function useAdminDemoData() {
 }
 
 export function getPublicCatalog(database = getAdminDemoData()) {
-  const publicCategories = database.categories
-    .filter((category) => category.enabled)
-    .sort((a, b) => Number(a.displayOrder) - Number(b.displayOrder))
-    .map((category) => {
-      const children = database.subcategories.filter((item) => item.categoryId === category.id && item.enabled)
-      return {
-        category: category.name,
-        icon: category.icon || '⌂',
-        count: children.length,
-        image: category.image || 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=480&q=75',
-        subcategories: children.map((item) => item.name),
-      }
-    })
-
   const publicServices = database.services
     .filter((service) => {
       const provider = database.providers.find((item) => item.id === service.providerId)
-      const subcategory = database.subcategories.find((item) => item.id === service.subcategoryId)
       const providerIsAvailable = !service.providerId || (provider && ['Approved', 'Active'].includes(provider.status))
-      const subcategoryIsAvailable = !service.subcategoryId || (subcategory && subcategory.enabled)
-      return service.enabled &&
-        providerIsAvailable &&
-        subcategoryIsAvailable &&
-        database.categories.some((category) => category.id === service.categoryId && category.enabled)
+      return service.enabled && providerIsAvailable
     })
     .map((service) => {
-      const category = database.categories.find((item) => item.id === service.categoryId)
-      const subcategory = database.subcategories.find((item) => item.id === service.subcategoryId)
       const provider = database.providers.find((item) => item.id === service.providerId)
       const providerName = provider?.fullName || service.providerName || 'Local provider'
       const providerArea = service.locations || provider?.location || 'Local area'
-      const image = service.images || service.image || category?.image || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=900&q=85'
+      const image = service.images || service.image || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=900&q=85'
       return {
         slug: service.id,
-        name: service.title || subcategory?.name || 'Local service',
-        category: category?.name || 'Services',
-        categoryIcon: category?.icon || '⌂',
+        name: service.title || 'Local service',
         description: service.description || 'Contact a local professional to discuss this service.',
         provider: {
           name: providerName,
@@ -219,12 +169,10 @@ export function getPublicCatalog(database = getAdminDemoData()) {
         reviews: Number(provider?.reviewCount || service.reviewCount || 0),
         price: Number(service.startingPrice || service.price || 0),
         image,
-        categoryImage: category?.image || image,
-        featured: Boolean(service.featured),
       }
     })
 
-  return { categories: publicCategories, services: publicServices }
+  return { services: publicServices }
 }
 
 export const makeDemoId = (prefix, value = '') => `${prefix}-${slugify(value) || 'item'}-${Date.now().toString(36)}`

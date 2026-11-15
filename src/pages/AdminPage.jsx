@@ -6,8 +6,6 @@ import '../admin.css'
 
 const navigation = [
   { path: '', label: 'Dashboard', icon: '▦' },
-  { path: 'categories', label: 'Categories', icon: '◫' },
-  { path: 'subcategories', label: 'Subcategories', icon: '≡' },
   { path: 'services', label: 'Services', icon: '⌂' },
   { path: 'employees', label: 'Employees', icon: '♙' },
   { path: 'providers', label: 'Service Providers', icon: '♧' },
@@ -24,8 +22,6 @@ const navigation = [
 const EMPTY_RECORDS = []
 
 const selectFields = {
-  categoryId: { label: 'Main category', options: 'categories', value: 'id', text: 'name' },
-  subcategoryId: { label: 'Subcategory', options: 'subcategories', value: 'id', text: 'name' },
   providerId: { label: 'Service provider', options: 'providers', value: 'id', text: 'fullName' },
   employeeId: { label: 'Employee', options: 'employees', value: 'id', text: 'fullName' },
   serviceId: { label: 'Service', options: 'services', value: 'id', text: 'title' },
@@ -34,37 +30,11 @@ const selectFields = {
 const statusOptions = ['Active', 'Inactive', 'Pending', 'Approved', 'Rejected', 'Suspended', 'Published', 'Hidden', 'Pending review', 'Confirmed', 'Assigned', 'In Progress', 'Completed', 'Cancelled']
 
 const modules = {
-  categories: {
-    key: 'categories', title: 'Categories', singular: 'category', description: 'Organize the kinds of local help customers can find.',
-    columns: [['name', 'Category'], ['description', 'Description'], ['displayOrder', 'Order'], ['enabled', 'Visibility']],
-    fields: [
-      { name: 'name', label: 'Category name', required: true },
-      { name: 'description', label: 'Description', type: 'textarea', required: true },
-      { name: 'image', label: 'Category image', type: 'image' },
-      { name: 'displayOrder', label: 'Display order', type: 'number' },
-      { name: 'enabled', label: 'Visible on website', type: 'checkbox' },
-    ],
-  },
-  subcategories: {
-    key: 'subcategories', title: 'Subcategories', singular: 'subcategory', description: 'Group specific services under their main category.',
-    columns: [['name', 'Subcategory'], ['categoryId', 'Main category'], ['startingPrice', 'Starting price'], ['duration', 'Duration'], ['enabled', 'Visibility']],
-    fields: [
-      { name: 'categoryId', type: 'select', required: true },
-      { name: 'name', label: 'Subcategory name', required: true },
-      { name: 'description', label: 'Description', type: 'textarea' },
-      { name: 'image', label: 'Image', type: 'image' },
-      { name: 'startingPrice', label: 'Starting price (₹)', type: 'number' },
-      { name: 'duration', label: 'Estimated duration' },
-      { name: 'enabled', label: 'Enabled', type: 'checkbox' },
-    ],
-  },
   services: {
-    key: 'services', title: 'Services', singular: 'service', description: 'Set up the services shown to customers and choose which ones to feature.',
-    columns: [['title', 'Service'], ['categoryId', 'Category'], ['startingPrice', 'Starting price'], ['providerId', 'Provider'], ['featured', 'Featured'], ['enabled', 'Status']],
+    key: 'services', title: 'Services', singular: 'service', description: 'Manage the services customers can browse directly on the marketplace.',
+    columns: [['title', 'Service'], ['startingPrice', 'Starting price'], ['providerId', 'Provider'], ['enabled', 'Status']],
     fields: [
       { name: 'title', label: 'Service title', required: true },
-      { name: 'categoryId', type: 'select', required: true },
-      { name: 'subcategoryId', type: 'select', required: true },
       { name: 'description', label: 'Detailed description', type: 'textarea', required: true },
       { name: 'images', label: 'Image URL', type: 'image' },
       { name: 'startingPrice', label: 'Starting price (₹)', type: 'number', required: true },
@@ -73,31 +43,29 @@ const modules = {
       { name: 'locations', label: 'Coverage locations' },
       { name: 'requirements', label: 'Requirements', type: 'textarea' },
       { name: 'providerId', type: 'select', required: true },
-      { name: 'featured', label: 'Feature on homepage', type: 'checkbox' },
       { name: 'enabled', label: 'Visible on website', type: 'checkbox' },
     ],
   },
   employees: {
     key: 'employees', title: 'Employees', singular: 'employee', description: 'Manage in-house team profiles, skills, and availability.',
-    columns: [['profileImage', ''], ['fullName', 'Employee'], ['employeeId', 'Employee ID'], ['phone', 'Phone'], ['categoryIds', 'Assigned category'], ['location', 'Location'], ['availability', 'Availability'], ['status', 'Status']],
+    columns: [['profileImage', ''], ['fullName', 'Employee'], ['employeeId', 'Employee ID'], ['phone', 'Phone'], ['location', 'Location'], ['availability', 'Availability'], ['status', 'Status']],
     fields: [
       { name: 'fullName', label: 'Full name', required: true }, { name: 'employeeId', label: 'Employee ID', required: true },
       { name: 'profileImage', label: 'Profile image', type: 'image' }, { name: 'phone', label: 'Phone number', type: 'tel', required: true },
       { name: 'email', label: 'Email address', type: 'email' }, { name: 'address', label: 'Address', type: 'textarea' },
       { name: 'gender', label: 'Gender (optional)' }, { name: 'experience', label: 'Experience' },
-      { name: 'skills', label: 'Skills and specialization', type: 'textarea' }, { name: 'categoryIds', label: 'Assigned categories' },
-      { name: 'subcategoryIds', label: 'Assigned subcategories' }, { name: 'location', label: 'Working locations' },
+      { name: 'skills', label: 'Skills and specialization', type: 'textarea' }, { name: 'location', label: 'Working locations' },
       { name: 'availability', label: 'Availability' }, { name: 'joiningDate', label: 'Joining date', type: 'date' },
       { name: 'status', label: 'Account status', type: 'select', options: statusOptions },
     ],
   },
   providers: {
     key: 'providers', title: 'Service Providers', singular: 'provider', description: 'Review independent provider applications and manage their marketplace profiles.',
-    columns: [['profileImage', ''], ['fullName', 'Provider'], ['phone', 'Phone'], ['categoryId', 'Category'], ['location', 'Location'], ['rating', 'Rating'], ['status', 'Status']],
+    columns: [['profileImage', ''], ['fullName', 'Provider'], ['phone', 'Phone'], ['location', 'Location'], ['rating', 'Rating'], ['status', 'Status']],
     fields: [
       { name: 'fullName', label: 'Full name', required: true }, { name: 'profileImage', label: 'Profile image', type: 'image' },
       { name: 'phone', label: 'Phone number', type: 'tel', required: true }, { name: 'email', label: 'Email address', type: 'email' },
-      { name: 'categoryId', type: 'select' }, { name: 'skills', label: 'Skills and specialization', type: 'textarea' },
+      { name: 'skills', label: 'Services offered and skills', type: 'textarea' },
       { name: 'experience', label: 'Experience' }, { name: 'location', label: 'Service location' },
       { name: 'availability', label: 'Availability' }, { name: 'status', label: 'Application status', type: 'select', options: statusOptions },
       { name: 'verified', label: 'Provider details verified', type: 'checkbox' },
@@ -109,7 +77,7 @@ const modules = {
     columns: [['id', 'Booking'], ['customerName', 'Customer'], ['serviceTitle', 'Service'], ['providerId', 'Provider'], ['employeeId', 'Employee'], ['date', 'Date'], ['location', 'Location'], ['amount', 'Amount'], ['status', 'Status'], ['paymentStatus', 'Payment']],
     fields: [
       { name: 'customerName', label: 'Customer name', required: true }, { name: 'customerPhone', label: 'Customer phone', type: 'tel' },
-      { name: 'serviceId', type: 'select', required: true }, { name: 'categoryId', type: 'select', required: true },
+      { name: 'serviceId', type: 'select', required: true },
       { name: 'providerId', type: 'select' }, { name: 'employeeId', type: 'select' },
       { name: 'date', label: 'Booking date', type: 'date' }, { name: 'time', label: 'Time' }, { name: 'location', label: 'Location' },
       { name: 'status', label: 'Booking status', type: 'select', options: ['Pending', 'Confirmed', 'Assigned', 'In Progress', 'Completed', 'Cancelled', 'Rejected'] },
@@ -291,8 +259,6 @@ function AdminDashboard() {
   const revenue = data.bookings.filter((booking) => booking.paymentStatus === 'Paid').reduce((total, booking) => total + Number(booking.amount || 0), 0)
   const stats = [
     { label: 'Total services', value: data.services.length, icon: '⌂', tone: 'sage', note: `${enabledServices.length} visible in marketplace` },
-    { label: 'Total categories', value: data.categories.length, icon: '◫', tone: 'blue', note: 'Main service groups' },
-    { label: 'Total subcategories', value: data.subcategories.length, icon: '≡', tone: 'lavender', note: 'Service types' },
     { label: 'Total employees', value: data.employees.length, icon: '♙', tone: 'peach', note: 'In-house team' },
     { label: 'Total providers', value: data.providers.length, icon: '♧', tone: 'lavender', note: 'Independent professionals' },
     { label: 'Total customers', value: data.customers.length, icon: '♧', tone: 'blue', note: 'Demo accounts' },
@@ -313,7 +279,7 @@ function AdminDashboard() {
       </div>
       <div className="admin-dashboard-lower">
         <section className="admin-panel admin-recent-panel"><div className="admin-panel-heading"><div><h2>Recent bookings</h2><p>The latest activity on the marketplace</p></div><Link to="/admin/bookings">View all →</Link></div><RecentBookings rows={[...data.bookings].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)} /></section>
-        <section className="admin-panel admin-quick-panel"><div className="admin-panel-heading"><div><h2>Quick actions</h2><p>Common tasks, one click away</p></div></div><div className="admin-quick-actions"><Link to="/admin/categories"><span>◫</span><div><strong>New category</strong><small>Organize your services</small></div><b>→</b></Link><Link to="/admin/services"><span>⌂</span><div><strong>Add a service</strong><small>Publish to the marketplace</small></div><b>→</b></Link><Link to="/admin/bookings"><span>▤</span><div><strong>Manage bookings</strong><small>Assign and update jobs</small></div><b>→</b></Link><Link to="/admin/providers"><span>♧</span><div><strong>Review providers</strong><small>Manage applications</small></div><b>→</b></Link></div></section>
+        <section className="admin-panel admin-quick-panel"><div className="admin-panel-heading"><div><h2>Quick actions</h2><p>Common tasks, one click away</p></div></div><div className="admin-quick-actions"><Link to="/admin/services"><span>⌂</span><div><strong>Add a service</strong><small>Publish to the marketplace</small></div><b>→</b></Link><Link to="/admin/bookings"><span>▤</span><div><strong>Manage bookings</strong><small>Assign and update jobs</small></div><b>→</b></Link><Link to="/admin/providers"><span>♧</span><div><strong>Review providers</strong><small>Manage applications</small></div><b>→</b></Link></div></section>
       </div>
       <div className="admin-dashboard-lower admin-people-row">
         <SimplePeoplePanel title="Recently registered employees" emptyText="No employee profiles yet." rows={data.employees.slice(0, 4)} nameKey="fullName" metaKey="employeeId" imageKey="profileImage" />
@@ -361,7 +327,6 @@ function AdminSection() {
   const database = useAdminDemoData()
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
   const [dateFilter, setDateFilter] = useState('')
   const [locationFilter, setLocationFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -376,11 +341,10 @@ function AdminSection() {
       const matchesSearch = !normalizedQuery || Object.values(record).some((value) => String(value ?? '').toLowerCase().includes(normalizedQuery))
       const status = record.status ?? (typeof record.enabled === 'boolean' ? (record.enabled ? 'Active' : 'Inactive') : '')
       const matchesDate = !dateFilter || record.date === dateFilter
-      const matchesCategory = !categoryFilter || record.categoryId === categoryFilter
       const matchesLocation = !locationFilter || String(record.location || '').toLowerCase().includes(locationFilter.toLowerCase())
-      return matchesSearch && matchesDate && matchesCategory && matchesLocation && (!statusFilter || status === statusFilter)
+      return matchesSearch && matchesDate && matchesLocation && (!statusFilter || status === statusFilter)
     })
-  }, [records, query, statusFilter, categoryFilter, dateFilter, locationFilter])
+  }, [records, query, statusFilter, dateFilter, locationFilter])
 
   if (!config) return <div className="admin-not-found"><h1>Page not found</h1><p>This admin section does not exist.</p></div>
 
@@ -412,7 +376,6 @@ function AdminSection() {
       const employee = database.employees.find((item) => item.id === record.employeeId)
       if (service) {
         record.serviceTitle = service.title
-        record.categoryId = service.categoryId
       }
       record.providerName = provider?.fullName || ''
       record.employeeName = employee?.fullName || ''
@@ -441,15 +404,6 @@ function AdminSection() {
   }
 
   function handleDelete(record) {
-    const isInUse = config.key === 'categories'
-      ? database.subcategories.some((item) => item.categoryId === record.id) || database.services.some((item) => item.categoryId === record.id)
-      : config.key === 'subcategories'
-        ? database.services.some((item) => item.subcategoryId === record.id)
-        : false
-    if (isInUse) {
-      showToast('error', 'This item is being used by another record. Disable it instead of deleting it.')
-      return
-    }
     if (config.key === 'admins' || config.key === 'settings') return
     if (!window.confirm(`Delete “${record.name || record.title || record.fullName || record.id}” from this browser demo?`)) return
 
@@ -471,7 +425,6 @@ function AdminSection() {
       setCurrentPage(1)
       setQuery('')
       setStatusFilter('')
-      setCategoryFilter('')
       setDateFilter('')
       setLocationFilter('')
       showToast('success', 'Demo data has been restored to its original sample state.')
@@ -489,7 +442,7 @@ function AdminSection() {
       {config.serverOnly && <div className="admin-feature-notice"><strong>Server-side setup required</strong><span>Public admin creation, role assignment, and permission enforcement are intentionally unavailable in this client-only demo.</span></div>}
       {toast && <div className={`admin-toast ${toast.type}`} role={toast.type === 'error' ? 'alert' : 'status'}><span>{toast.message}</span><button type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}>×</button></div>}
       <section className="admin-panel admin-data-panel">
-        <div className="admin-data-toolbar"><div className="admin-data-count"><strong>{filteredRecords.length}</strong><span>{config.title.toLowerCase()} in this demo</span></div><div className="admin-data-filters"><label className="admin-search"><span aria-hidden="true">⌕</span><input aria-label={`Search ${config.title}`} value={query} onChange={(event) => { setQuery(event.target.value); setCurrentPage(1) }} placeholder={`Search ${config.title.toLowerCase()}...`} /></label>{section === 'bookings' && <><input className="admin-filter-date" aria-label="Filter by booking date" type="date" value={dateFilter} onChange={(event) => { setDateFilter(event.target.value); setCurrentPage(1) }} /><select aria-label="Filter by booking category" value={categoryFilter} onChange={(event) => { setCategoryFilter(event.target.value); setCurrentPage(1) }}><option value="">All categories</option>{database.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><input className="admin-filter-location" aria-label="Filter by location" value={locationFilter} onChange={(event) => { setLocationFilter(event.target.value); setCurrentPage(1) }} placeholder="Location" /></>}{hasStatus && <select aria-label="Filter by status" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setCurrentPage(1) }}><option value="">All statuses</option>{statuses.map((status) => <option key={status}>{status}</option>)}</select>}</div></div>
+        <div className="admin-data-toolbar"><div className="admin-data-count"><strong>{filteredRecords.length}</strong><span>{config.title.toLowerCase()} in this demo</span></div><div className="admin-data-filters"><label className="admin-search"><span aria-hidden="true">⌕</span><input aria-label={`Search ${config.title}`} value={query} onChange={(event) => { setQuery(event.target.value); setCurrentPage(1) }} placeholder={`Search ${config.title.toLowerCase()}...`} /></label>{section === 'bookings' && <><input className="admin-filter-date" aria-label="Filter by booking date" type="date" value={dateFilter} onChange={(event) => { setDateFilter(event.target.value); setCurrentPage(1) }} /><input className="admin-filter-location" aria-label="Filter by location" value={locationFilter} onChange={(event) => { setLocationFilter(event.target.value); setCurrentPage(1) }} placeholder="Location" /></>}{hasStatus && <select aria-label="Filter by status" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setCurrentPage(1) }}><option value="">All statuses</option>{statuses.map((status) => <option key={status}>{status}</option>)}</select>}</div></div>
         {visibleRecords.length ? (
           <>
             <div className="admin-table-scroll"><table className="admin-table admin-data-table"><thead><tr>{config.columns.map(([key, label]) => <th key={key}>{label || (key.toLowerCase().includes('image') ? 'Photo' : key)}</th>)}{!config.readOnly && !config.serverOnly && <th>Actions</th>}</tr></thead><tbody>{visibleRecords.map((record) => <tr key={record.id}>{config.columns.map(([key]) => <td key={key}>{renderCell(key, record[key], record, database)}</td>)}{!config.readOnly && !config.serverOnly && <td><div className="admin-row-actions"><button type="button" onClick={() => setFormRecord(record)}>Edit</button>{!config.singleRecord && <button type="button" className="danger" onClick={() => handleDelete(record)}>Delete</button>}</div></td>}</tr>)}</tbody></table></div>
@@ -504,10 +457,8 @@ function AdminSection() {
 
 function renderCell(key, value, record, database) {
   if (key === 'profileImage' || key === 'image') return value ? <img className="admin-table-avatar" src={value} alt="" /> : <span className="admin-table-avatar admin-avatar-placeholder">{(record.fullName || record.name || '•').slice(0, 1)}</span>
-  if (key === 'enabled' || key === 'featured' || key === 'verified') return <StatusBadge value={value ? (key === 'featured' ? 'Featured' : key === 'verified' ? 'Verified' : 'Active') : 'Inactive'} />
+  if (key === 'enabled' || key === 'verified') return <StatusBadge value={value ? (key === 'verified' ? 'Verified' : 'Active') : 'Inactive'} />
   if (key === 'status' || key === 'paymentStatus') return <StatusBadge value={value} />
-  if (key === 'categoryId') return database.categories.find((category) => category.id === value)?.name || value || '—'
-  if (key === 'subcategoryId') return database.subcategories.find((subcategory) => subcategory.id === value)?.name || value || '—'
   if (key === 'providerId') return database.providers.find((provider) => provider.id === value)?.fullName || value || '—'
   if (key === 'employeeId') return database.employees.find((employee) => employee.id === value)?.fullName || value || '—'
   if (key === 'serviceId') return database.services.find((service) => service.id === value)?.title || value || '—'
@@ -566,13 +517,6 @@ function RecordForm({ config, record, database, onClose, onSave }) {
       setError(`${requiredField.label || requiredField.name} is required.`)
       return
     }
-    if (config.key === 'services' && draft.subcategoryId) {
-      const subcategory = database.subcategories.find((item) => item.id === draft.subcategoryId)
-      if (subcategory && subcategory.categoryId !== draft.categoryId) {
-        setError('Choose a subcategory that belongs to the selected main category.')
-        return
-      }
-    }
     onSave(draft)
   }
 
@@ -580,8 +524,7 @@ function RecordForm({ config, record, database, onClose, onSave }) {
     if (field.options) return field.options.map((option) => ({ value: option, label: option }))
     const source = selectFields[field.name]?.options
     if (!source) return []
-    let rows = database[source] || []
-    if (field.name === 'subcategoryId' && draft.categoryId) rows = rows.filter((item) => item.categoryId === draft.categoryId)
+    const rows = database[source] || []
     return rows.map((item) => ({ value: item[selectFields[field.name].value], label: item[selectFields[field.name].text] }))
   }
 

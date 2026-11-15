@@ -107,26 +107,13 @@
 .section-heading p { max-width: 530px; margin-bottom: 0; font-size: 13px; }
 .text-link { flex: 0 0 auto; padding-bottom: 5px; color: var(--market-green); font-size: 11px; font-weight: 700; }
 .text-link span { margin-left: 8px; font-size: 15px; }
-.category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.category-card { min-height: 107px; display: grid; grid-template-columns: 58px 1fr; align-items: center; gap: 13px; padding: 12px; position: relative; background: #fffdf8; border: 1px solid #e8dfd2; border-radius: 3px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-.category-card:hover { transform: translateY(-3px); border-color: #cbb79f; box-shadow: 4px 5px 0 rgba(183,93,62,.11); }
-.category-photo { width: 58px; height: 68px; grid-column: 1; grid-row: 1; object-fit: cover; }
-.category-copy { grid-column: 2; grid-row: 1; padding-right: 14px; }
-.category-copy small { display: block; margin-top: 5px; color: #9a7962; font-size: 9px; }
-.category-icon { position: absolute; left: 49px; top: 9px; width: 22px; height: 22px; display: grid; place-items: center; border: 2px solid #fffdf8; border-radius: 50%; background: #b75d3e; color: #fff; font-family: Georgia, serif; font-size: 12px; }
-.category-tone-1 { background: #bd714e; }
-.category-tone-2 { background: #687b54; }
-.category-tone-3 { background: #8b6954; }
-.category-name { max-width: 145px; font-size: 11px; font-weight: 700; line-height: 1.4; }
-.category-arrow { position: absolute; right: 10px; top: 8px; color: #a87860; font-size: 13px; }
-.featured-section { padding-top: 45px; padding-bottom: 96px; }
+.popular-section { padding-top: 45px; padding-bottom: 96px; }
 .service-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
 .service-card { overflow: hidden; border: 1px solid #eaece6; border-radius: 7px; background: #fff; transition: transform .2s ease, box-shadow .2s ease; }
 .service-card:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(32,54,46,.1); }
 .service-card-image { height: 184px; position: relative; display: block; overflow: hidden; background: #e9eee5; }
 .service-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
 .service-card:hover .service-card-image img { transform: scale(1.035); }
-.card-category { position: absolute; left: 13px; bottom: 13px; padding: 5px 9px; border-radius: 3px; background: rgba(255,255,255,.94); color: var(--market-green); font-size: 9px; font-weight: 700; }
 .card-save { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.93); color: var(--market-green); font-size: 18px; }
 .service-card-body { padding: 16px 16px 13px; }
 .service-card-title-row { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
@@ -213,9 +200,6 @@
 .location-filter { display: flex; flex: .85; align-items: center; gap: 7px; padding: 0 8px; color: var(--market-green); }
 .filter-bar select { width: 100%; height: 40px; padding: 0 25px 0 9px; border: 0; border-left: 1px solid #eceee8; background: #fff; color: #59685e; font-size: 10px; }
 .filter-submit { min-height: 40px; padding: 0 17px; }
-.subcategory-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
-.subcategory-chips button { padding: 6px 10px; border: 1px solid #e3d8c8; border-radius: 3px; background: #fffdf8; color: #59685e; cursor: pointer; font-size: 9px; transition: background .15s, border-color .15s; }
-.subcategory-chips button:hover { border-color: #b75d3e; background: #f7eee5; color: #984832; }
 .listing-toolbar { display: flex; align-items: center; justify-content: space-between; margin: 32px 0 18px; }
 .listing-toolbar h2 { margin-bottom: 3px; font-size: 20px; letter-spacing: -.035em; }
 .listing-toolbar p { margin: 0; font-size: 10px; }
@@ -354,7 +338,6 @@
   .market-header-actions .button { padding: 0 11px; }
   .hero-inner { padding-left: 26px; padding-right: 26px; }
   .section { padding-left: 26px; padding-right: 26px; }
-  .category-grid { grid-template-columns: repeat(2,1fr); }
   .service-grid, .listing-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .trust-band-inner { gap: 7%; }
   .providers-section { padding-left: 26px; padding-right: 26px; gap: 5%; }
@@ -406,19 +389,10 @@
   .section-heading h2 { font-size: 27px; }
   .section-heading p { font-size: 11px; }
   .text-link { padding: 0; }
-  .category-grid { gap: 8px; }
-  .category-card { min-height: 83px; gap: 9px; padding: 8px; grid-template-columns: 45px 1fr; }
-  .category-photo { width: 45px; height: 57px; }
-  .category-icon { left: 37px; top: 6px; width: 19px; height: 19px; font-size: 10px; }
-  .category-copy { padding-right: 7px; }
-  .category-name { max-width: 115px; padding-right: 4px; font-size: 10px; }
-  .category-copy small { margin-top: 3px; font-size: 8px; }
-  .category-arrow { right: 6px; top: 5px; font-size: 9px; }
-  .featured-section { padding-top: 28px; }
+  .popular-section { padding-top: 28px; }
   .service-grid, .listing-grid { grid-template-columns: 1fr; gap: 12px; }
   .service-card { display: grid; grid-template-columns: 38% 1fr; min-height: 138px; }
   .service-card-image, .listing-grid .service-card-image { height: 100%; min-height: 138px; }
-  .card-category { left: 7px; bottom: 7px; max-width: calc(100% - 14px); padding: 4px 6px; font-size: 7px; }
   .card-save { top: 7px; right: 7px; width: 25px; height: 25px; }
   .service-card-body { padding: 12px 10px 9px; }
   .service-card-title-row { flex-direction: column-reverse; gap: 3px; }
@@ -562,14 +536,12 @@
 .dark .hero-art-note strong { color: var(--market-ink); }
 .dark .hero-art-note > span:last-child, .dark .hero-caption { color: var(--market-body); }
 .dark .hero-art-stamp { border-color: #e5c7a8; background: #a9553c; }
-.dark .category-card, .dark .service-card, .dark .step-card, .dark .testimonial-card,
+.dark .service-card, .dark .step-card, .dark .testimonial-card,
 .dark .provider-profile, .dark .booking-card, .dark .review-row, .dark .mission-grid article,
 .dark .form-card, .dark .filter-bar, .dark .empty-state {
   border-color: var(--market-line);
   background: var(--market-surface);
 }
-.dark .category-card:hover { border-color: #829080; }
-.dark .category-icon { border-color: var(--market-surface); }
 .dark .service-card-bottom { border-top-color: var(--market-line); }
 .dark .trust-band, .dark .newsletter, .dark .team-callout, .dark .page-hero {
   background-color: #304542;
@@ -582,8 +554,6 @@
   color: var(--market-ink);
 }
 .dark .filter-bar select { border-left-color: var(--market-line); }
-.dark .subcategory-chips button { border-color: var(--market-line); background: var(--market-surface); color: var(--market-body); }
-.dark .subcategory-chips button:hover { border-color: #bd6948; background: #3a514b; color: #f2eee3; }
 .dark .sort-select select { border: 1px solid var(--market-line); }
 .dark .contact-method > span, .dark .step-illustration, .dark .reviewer > span,
 .dark .review-avatar, .dark .account-avatar {
@@ -596,7 +566,7 @@
 }
 .dark .verified-mark { background: #40574c; color: #d5dfc2; }
 .dark .auth-notice { background: #493b34; color: #f2c8b0 !important; }
-.dark .stats-row strong, .dark .category-copy small { color: #e1b080; }
+.dark .stats-row strong { color: #e1b080; }
 
 @media (max-width: 650px) {
   .market-theme-toggle { width: 32px; height: 32px; }

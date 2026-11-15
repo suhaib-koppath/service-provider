@@ -28,7 +28,6 @@ function ServiceCard({ service }) {
     <article className="service-card">
       <Link to={`/services/${service.slug}`} className="service-card-image">
         <img src={service.image} alt="" loading="lazy" />
-        <span className="card-category">{service.category}</span>
         <span className="card-save" aria-hidden="true">♡</span>
       </Link>
       <div className="service-card-body">
@@ -54,8 +53,8 @@ function HomePage() {
   const [location, setLocation] = useState('')
   const navigate = useNavigate()
   const database = useAdminDemoData()
-  const { categories, services } = useMemo(() => getPublicCatalog(database), [database])
-  const featured = services.filter((service) => service.featured).slice(0, 6)
+  const { services } = useMemo(() => getPublicCatalog(database), [database])
+  const popularServices = [...services].sort((a, b) => b.reviews - a.reviews)
   const heroContent = database.content.find((item) => item.section === 'Homepage banner' && item.enabled)
   const testimonialContent = database.content
     .filter((item) => item.section === 'Testimonial' && item.enabled)
@@ -109,23 +108,9 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="section categories-section">
-        <SectionHeading eyebrow="THE LOCAL DIRECTORY" title="What needs doing?" description="Pick a category. We’ll show you who’s nearby." link="/services" />
-        <div className="category-grid">
-          {categories.map((category, index) => (
-            <Link key={category.category} to={`/services?category=${encodeURIComponent(category.category)}`} className="category-card">
-              <img className="category-photo" src={category.image} alt="" loading="lazy" />
-              <span className={`category-icon category-tone-${index % 4}`} aria-hidden="true">{category.icon}</span>
-              <span className="category-copy"><span className="category-name">{category.category}</span><small>{category.count} kinds of help</small></span>
-              <span className="category-arrow" aria-hidden="true">↗</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="section featured-section">
-        <SectionHeading eyebrow="A FEW PLACES TO START" title="The jobs that always come up." description="Browse a few everyday essentials, then find the right person for yours." link="/services" />
-        <div className="service-grid">{featured.map((service) => <ServiceCard key={service.slug} service={service} />)}</div>
+      <section className="section popular-section">
+        <SectionHeading eyebrow="POPULAR LOCAL SERVICES" title="Good help, all in one place." description="Browse every service our local professionals offer." link="/services" />
+        <div className="service-grid">{popularServices.map((service) => <ServiceCard key={service.slug} service={service} />)}</div>
       </section>
 
       <section className="trust-band">
@@ -166,46 +151,38 @@ function HomePage() {
 function ServicesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const database = useAdminDemoData()
-  const { categories, services } = useMemo(() => getPublicCatalog(database), [database])
+  const { services } = useMemo(() => getPublicCatalog(database), [database])
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [location, setLocation] = useState(searchParams.get('location') || '')
-  const [category, setCategory] = useState(searchParams.get('category') || '')
   const [maxPrice, setMaxPrice] = useState('')
   const [sort, setSort] = useState('popular')
-  const [limit, setLimit] = useState(12)
   const filtered = useMemo(() => {
     let result = services.filter((service) => {
-      const matchesQuery = `${service.name} ${service.category} ${service.provider.name}`.toLowerCase().includes(query.trim().toLowerCase())
-      const matchesCategory = !category || service.category === category
+      const matchesQuery = `${service.name} ${service.provider.name}`.toLowerCase().includes(query.trim().toLowerCase())
       const matchesLocation = !location || service.provider.area.toLowerCase().includes(location.trim().toLowerCase())
       const matchesPrice = !maxPrice || service.price <= Number(maxPrice)
-      return matchesQuery && matchesCategory && matchesLocation && matchesPrice
+      return matchesQuery && matchesLocation && matchesPrice
     })
     if (sort === 'rating') result = [...result].sort((a, b) => Number(b.rating) - Number(a.rating))
     if (sort === 'price-low') result = [...result].sort((a, b) => a.price - b.price)
     if (sort === 'price-high') result = [...result].sort((a, b) => b.price - a.price)
     if (sort === 'popular') result = [...result].sort((a, b) => b.reviews - a.reviews)
     return result
-  }, [category, location, maxPrice, query, services, sort])
-  const activeCategory = categories.find((item) => item.category === category)
+  }, [location, maxPrice, query, services, sort])
 
   function updateFilters(event) {
     event.preventDefault()
     const next = new URLSearchParams()
     if (query.trim()) next.set('q', query.trim())
     if (location.trim()) next.set('location', location.trim())
-    if (category) next.set('category', category)
     setSearchParams(next)
-    setLimit(12)
   }
 
   function clearFilters() {
     setQuery('')
     setLocation('')
-    setCategory('')
     setMaxPrice('')
     setSearchParams({})
-    setLimit(12)
   }
 
   return (
@@ -215,15 +192,12 @@ function ServicesPage() {
         <div className="breadcrumbs"><Link to="/home">Home</Link><span>/</span><span>Services</span></div>
         <form className="filter-bar" onSubmit={updateFilters}>
           <label className="filter-search"><span aria-hidden="true">⌕</span><span className="sr-only">Search services</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try “plumber” or “catering”" /></label>
-          <label><span className="sr-only">Filter by category</span><select value={category} onChange={(event) => { setCategory(event.target.value); setLimit(12) }}><option value="">All categories</option>{categories.map((item) => <option key={item.category}>{item.category}</option>)}</select></label>
           <label className="location-filter"><span aria-hidden="true">⌖</span><span className="sr-only">Filter by location</span><input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="City or area" /></label>
           <label><span className="sr-only">Maximum price</span><select value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)}><option value="">Any price</option><option value="500">Under ₹500</option><option value="1000">Under ₹1,000</option><option value="1500">Under ₹1,500</option><option value="2000">Under ₹2,000</option></select></label>
           <button type="submit" className="button button-primary filter-submit">Search</button>
         </form>
-        {activeCategory?.subcategories?.length > 0 && <div className="subcategory-chips" aria-label={`${activeCategory.category} subcategories`}>{activeCategory.subcategories.map((subcategory) => <button key={subcategory} type="button" onClick={() => { setQuery(subcategory); setLimit(12); setSearchParams({ q: subcategory, category }) }}>{subcategory}</button>)}</div>}
-        <div className="listing-toolbar"><div><h2>{category || 'All local services'}</h2><p>{filtered.length} services to explore</p></div><label className="sort-select">Sort by <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="popular">Most popular</option><option value="rating">Highest rated</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label></div>
-        {filtered.length ? <div className="service-grid listing-grid">{filtered.slice(0, limit).map((service) => <ServiceCard key={service.slug} service={service} />)}</div> : <div className="empty-state"><span aria-hidden="true">⌕</span><h3>No matching services just yet</h3><p>Try a different search or clear the filters to see all available services.</p><button className="button button-outline" onClick={clearFilters} type="button">Clear filters</button></div>}
-        {filtered.length > limit && <div className="load-more"><button type="button" className="button button-outline" onClick={() => setLimit(limit + 12)}>Show more services <span aria-hidden="true">↓</span></button></div>}
+        <div className="listing-toolbar"><div><h2>All local services</h2><p>{filtered.length} services to explore</p></div><label className="sort-select">Sort by <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="popular">Most popular</option><option value="rating">Highest rated</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label></div>
+        {filtered.length ? <div className="service-grid listing-grid">{filtered.map((service) => <ServiceCard key={service.slug} service={service} />)}</div> : <div className="empty-state"><span aria-hidden="true">⌕</span><h3>No matching services just yet</h3><p>Try a different search or clear the filters to see all available services.</p><button className="button button-outline" onClick={clearFilters} type="button">Clear filters</button></div>}
       </div>
     </div>
   )
@@ -242,8 +216,8 @@ function DetailPage() {
     <div className="detail-page">
       <div className="detail-container">
         <div className="breadcrumbs"><Link to="/home">Home</Link><span>/</span><Link to="/services">Services</Link><span>/</span><span>{service.name}</span></div>
-        <div className="detail-heading"><div><span className="eyebrow">{service.category}</span><h1>{service.name}</h1><div className="detail-rating"><span>★ {service.rating}</span><span>({service.reviews} neighbor reviews)</span><span>·</span><span>{service.provider.area}</span></div></div><span className="detail-price">From <strong>₹{service.price.toLocaleString('en-IN')}</strong></span></div>
-        <div className="detail-photo"><img src={service.categoryImage} alt={`${service.name} service`} /><span className="photo-caption">Local know-how, right around the corner.</span></div>
+        <div className="detail-heading"><div><span className="eyebrow">LOCAL SERVICE</span><h1>{service.name}</h1><div className="detail-rating"><span>★ {service.rating}</span><span>({service.reviews} neighbor reviews)</span><span>·</span><span>{service.provider.area}</span></div></div><span className="detail-price">From <strong>₹{service.price.toLocaleString('en-IN')}</strong></span></div>
+        <div className="detail-photo"><img src={service.image} alt={`${service.name} service`} /><span className="photo-caption">Local know-how, right around the corner.</span></div>
         <div className="detail-columns">
           <section className="detail-main">
             <span className="eyebrow">THE SERVICE</span><h2>Good work, done with care.</h2><p>{service.description} Every job is a little different, so reach out to the provider to talk through your needs and get a quote.</p>
@@ -260,11 +234,10 @@ function DetailPage() {
 
 function AboutPage() {
   const database = useAdminDemoData()
-  const { categories } = useMemo(() => getPublicCatalog(database), [database])
+  const { services } = useMemo(() => getPublicCatalog(database), [database])
   const aboutContent = database.content.find((item) => item.section === 'About us' && item.enabled)
-  const subcategoryCount = categories.reduce((total, category) => total + category.count, 0)
   const providerCount = database.providers.filter((provider) => ['Active', 'Approved'].includes(provider.status)).length
-  return <div className="standard-page"><div className="page-hero"><div><span className="eyebrow">A LITTLE MORE ABOUT US</span><h1>{aboutContent?.title || 'Good things grow close to home.'}</h1><p>{aboutContent?.body || 'We’re here to make it easier for neighbors to find the people who know how to help.'}</p></div></div><section className="standard-content about-content"><div className="about-intro"><span className="eyebrow">OUR STORY</span><h2>Local help has always been there.<br /><em>We just brought it closer.</em></h2><p>Finding a dependable electrician, a talented home cook, or someone to help with the harvest has traditionally meant asking around. Thumbly.in makes those neighborhood connections easier to find, while helping skilled local people meet the customers who need them.</p></div><div className="mission-grid"><article><span>01 / OUR MISSION</span><h3>Make everyday help easy to find.</h3><p>Connect people with local professionals who bring skill, care, and a personal touch to the work they do.</p></article><article><span>02 / OUR VISION</span><h3>Stronger neighborhoods, together.</h3><p>A world where local expertise is easier to discover, and independent providers have room to grow.</p></article></div><div className="stats-row"><div><strong>{categories.length}</strong><span>service categories</span></div><div><strong>{subcategoryCount}</strong><span>kinds of local services</span></div><div><strong>{providerCount}</strong><span>demo service providers</span></div></div><div className="team-callout"><span className="eyebrow">BUILT WITH THE NEIGHBORHOOD IN MIND</span><h2>Good work is personal.<br /><em>Finding it can be, too.</em></h2><Link className="button button-primary" to="/contact">Say hello to our team <span aria-hidden="true">↗</span></Link></div></section></div>
+  return <div className="standard-page"><div className="page-hero"><div><span className="eyebrow">A LITTLE MORE ABOUT US</span><h1>{aboutContent?.title || 'Good things grow close to home.'}</h1><p>{aboutContent?.body || 'We’re here to make it easier for neighbors to find the people who know how to help.'}</p></div></div><section className="standard-content about-content"><div className="about-intro"><span className="eyebrow">OUR STORY</span><h2>Local help has always been there.<br /><em>We just brought it closer.</em></h2><p>Finding a dependable electrician, a talented home cook, or someone to help with the harvest has traditionally meant asking around. Thumbly.in makes those neighborhood connections easier to find, while helping skilled local people meet the customers who need them.</p></div><div className="mission-grid"><article><span>01 / OUR MISSION</span><h3>Make everyday help easy to find.</h3><p>Connect people with local professionals who bring skill, care, and a personal touch to the work they do.</p></article><article><span>02 / OUR VISION</span><h3>Stronger neighborhoods, together.</h3><p>A world where local expertise is easier to discover, and independent providers have room to grow.</p></article></div><div className="stats-row"><div><strong>{services.length}</strong><span>local services</span></div><div><strong>{providerCount}</strong><span>demo service providers</span></div><div><strong>{database.locations.filter((location) => location.enabled).length}</strong><span>service areas</span></div></div><div className="team-callout"><span className="eyebrow">BUILT WITH THE NEIGHBORHOOD IN MIND</span><h2>Good work is personal.<br /><em>Finding it can be, too.</em></h2><Link className="button button-primary" to="/contact">Say hello to our team <span aria-hidden="true">↗</span></Link></div></section></div>
 }
 
 function ContactPage() {
@@ -278,13 +251,11 @@ function ContactPage() {
 
 function ProviderPage() {
   const [notice, setNotice] = useState('')
-  const database = useAdminDemoData()
-  const { categories } = useMemo(() => getPublicCatalog(database), [database])
   function handleSubmit(event) {
     event.preventDefault()
     setNotice('Thanks for introducing yourself! This demo has no provider application backend, so your details were not saved or sent. Please contact our team to apply.')
   }
-  return <div className="standard-page"><div className="page-hero provider-page-hero"><div><span className="eyebrow">GOOD WORK DESERVES TO BE FOUND</span><h1>Let your local<br />skills <em>shine.</em></h1><p>Meet more customers around the corner. You bring the know-how—we’ll help people find you.</p><Link className="button button-primary" to="#provider-form">Introduce yourself <span aria-hidden="true">↓</span></Link></div></div><div className="standard-content provider-content"><div className="benefit-row"><article><span>01</span><h3>Find more customers</h3><p>Put your services in front of people nearby who are looking for exactly what you do.</p></article><article><span>02</span><h3>Make it your own</h3><p>Share your skills, your coverage area, your availability, and your starting price.</p></article><article><span>03</span><h3>Build your reputation</h3><p>Let your great work and happy customers help the next neighbor find you.</p></article></div><form id="provider-form" className="form-card provider-form" onSubmit={handleSubmit}><span className="eyebrow">YOUR FIRST STEP</span><h2>Tell us about your work.</h2><p className="form-intro">Share a few details and our team can follow up about getting your profile started. Fields marked * are required.</p><div className="form-two-col"><label>Full name *<input name="name" autoComplete="name" required placeholder="Your full name" /></label><label>Phone number *<input name="phone" type="tel" autoComplete="tel" required placeholder="+91" /></label></div><div className="form-two-col"><label>Email address *<input name="email" type="email" autoComplete="email" required placeholder="you@example.com" /></label><label>Service category *<select name="category" required defaultValue=""><option value="" disabled>Choose your service</option>{categories.map((item) => <option key={item.category}>{item.category}</option>)}</select></label></div><label>Profile photo<input name="profile" type="file" accept="image/*" /></label><label>Your skills and experience *<input name="skills" required placeholder="e.g. AC repair, 6 years experience" /></label><label>Service location *<input name="location" required placeholder="City, area, neighborhoods you cover" /></label><div className="form-two-col"><label>Starting price (₹)<input name="price" type="number" min="0" placeholder="e.g. 500" /></label><label>Availability<select name="availability" defaultValue="Weekdays and weekends"><option>Weekdays and weekends</option><option>Weekdays</option><option>Weekends</option><option>Flexible, please ask</option></select></label></div><label>Tell us about your service *<textarea name="description" rows="5" required minLength="15" placeholder="What do you do, and what makes your service special?" /></label><button className="button button-primary" type="submit">Send an introduction <span aria-hidden="true">↗</span></button>{notice && <p role="status" className="form-notice">{notice}</p>}</form></div></div>
+  return <div className="standard-page"><div className="page-hero provider-page-hero"><div><span className="eyebrow">GOOD WORK DESERVES TO BE FOUND</span><h1>Let your local<br />skills <em>shine.</em></h1><p>Meet more customers around the corner. You bring the know-how—we’ll help people find you.</p><Link className="button button-primary" to="#provider-form">Introduce yourself <span aria-hidden="true">↓</span></Link></div></div><div className="standard-content provider-content"><div className="benefit-row"><article><span>01</span><h3>Find more customers</h3><p>Put your services in front of people nearby who are looking for exactly what you do.</p></article><article><span>02</span><h3>Make it your own</h3><p>Share your skills, your coverage area, your availability, and your starting price.</p></article><article><span>03</span><h3>Build your reputation</h3><p>Let your great work and happy customers help the next neighbor find you.</p></article></div><form id="provider-form" className="form-card provider-form" onSubmit={handleSubmit}><span className="eyebrow">YOUR FIRST STEP</span><h2>Tell us about your work.</h2><p className="form-intro">Share a few details and our team can follow up about getting your profile started. Fields marked * are required.</p><div className="form-two-col"><label>Full name *<input name="name" autoComplete="name" required placeholder="Your full name" /></label><label>Phone number *<input name="phone" type="tel" autoComplete="tel" required placeholder="+91" /></label></div><label>Email address *<input name="email" type="email" autoComplete="email" required placeholder="you@example.com" /></label><label>Profile photo<input name="profile" type="file" accept="image/*" /></label><label>Services you offer and your experience *<textarea name="skills" rows="3" required placeholder="e.g. AC repair, electrician services, 6 years experience" /></label><label>Service location *<input name="location" required placeholder="City, area, neighborhoods you cover" /></label><div className="form-two-col"><label>Starting price (₹)<input name="price" type="number" min="0" placeholder="e.g. 500" /></label><label>Availability<select name="availability" defaultValue="Weekdays and weekends"><option>Weekdays and weekends</option><option>Weekdays</option><option>Weekends</option><option>Flexible, please ask</option></select></label></div><label>Tell us about your service *<textarea name="description" rows="5" required minLength="15" placeholder="What do you do, and what makes your service special?" /></label><button className="button button-primary" type="submit">Send an introduction <span aria-hidden="true">↗</span></button>{notice && <p role="status" className="form-notice">{notice}</p>}</form></div></div>
 }
 
 function FAQPage() {
