@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { addActivity, getAdminDemoData, makeDemoId, resetAdminDemoData, saveAdminDemoData, useAdminDemoData } from '../data/adminDemoStore.js'
 import { DEMO_ADMIN_ACCOUNT, getAdminSession, signInDemoAdmin, signOutDemoAdmin } from '../utils/adminDemoAuth.js'
+import ProviderAvatarStack, { ProviderAvatar } from '../components/ProviderAvatarStack.jsx'
 import '../admin.css'
 
 const navigation = [
@@ -22,6 +23,7 @@ const navigation = [
 const EMPTY_RECORDS = []
 
 const selectFields = {
+  providerIds: { label: 'Assigned providers', options: 'providers', value: 'id', text: 'fullName' },
   providerId: { label: 'Service provider', options: 'providers', value: 'id', text: 'fullName' },
   employeeId: { label: 'Employee', options: 'employees', value: 'id', text: 'fullName' },
   serviceId: { label: 'Service', options: 'services', value: 'id', text: 'title' },
@@ -32,7 +34,7 @@ const statusOptions = ['Active', 'Inactive', 'Pending', 'Approved', 'Rejected', 
 const modules = {
   services: {
     key: 'services', title: 'Services', singular: 'service', description: 'Manage the services customers can browse directly on the marketplace.',
-    columns: [['title', 'Service'], ['startingPrice', 'Starting price'], ['providerId', 'Provider'], ['enabled', 'Status']],
+    columns: [['title', 'Service'], ['startingPrice', 'Starting price'], ['providerIds', 'Providers'], ['enabled', 'Status']],
     fields: [
       { name: 'title', label: 'Service title', required: true },
       { name: 'description', label: 'Detailed description', type: 'textarea', required: true },
@@ -42,7 +44,7 @@ const modules = {
       { name: 'duration', label: 'Service duration' },
       { name: 'locations', label: 'Coverage locations' },
       { name: 'requirements', label: 'Requirements', type: 'textarea' },
-      { name: 'providerId', type: 'select', required: true },
+      { name: 'providerIds', label: 'Assigned providers *', type: 'multi-select', required: true },
       { name: 'enabled', label: 'Visible on website', type: 'checkbox' },
     ],
   },
@@ -96,10 +98,12 @@ const modules = {
   },
   reviews: {
     key: 'reviews', title: 'Reviews & Ratings', singular: 'review', description: 'Moderate customer feedback and service ratings.',
-    columns: [['customerName', 'Customer'], ['serviceTitle', 'Service'], ['providerName', 'Provider'], ['rating', 'Rating'], ['comment', 'Review'], ['date', 'Date'], ['status', 'Status']],
+    columns: [['customerName', 'Customer'], ['serviceId', 'Service'], ['providerId', 'Provider'], ['rating', 'Rating'], ['comment', 'Review'], ['date', 'Date'], ['status', 'Status']],
     fields: [
-      { name: 'customerName', label: 'Customer', required: true }, { name: 'serviceTitle', label: 'Service' },
-      { name: 'providerName', label: 'Provider' }, { name: 'rating', label: 'Rating (1–5)', type: 'number', required: true },
+      { name: 'customerName', label: 'Customer', required: true },
+      { name: 'serviceId', label: 'Service', type: 'select', required: true },
+      { name: 'providerId', label: 'Provider for this service', type: 'select', required: true },
+      { name: 'rating', label: 'Rating (1–5)', type: 'number', min: 1, max: 5, step: 1, required: true },
       { name: 'comment', label: 'Review', type: 'textarea', required: true }, { name: 'date', label: 'Date', type: 'date' },
       { name: 'status', label: 'Visibility', type: 'select', options: ['Published', 'Pending review', 'Hidden'] },
     ],
@@ -380,6 +384,13 @@ function AdminSection() {
       record.providerName = provider?.fullName || ''
       record.employeeName = employee?.fullName || ''
     }
+    if (config.key === 'reviews') {
+      const service = database.services.find((item) => item.id === record.serviceId)
+      const provider = database.providers.find((item) => item.id === record.providerId)
+      record.serviceTitle = service?.title || ''
+      record.providerName = provider?.fullName || ''
+      record.rating = Number(record.rating)
+    }
     if (config.key === 'providers') {
       record.rating = String(record.rating || 'New')
       record.reviewCount = Number(record.reviewCount || 0)
@@ -459,9 +470,14 @@ function renderCell(key, value, record, database) {
   if (key === 'profileImage' || key === 'image') return value ? <img className="admin-table-avatar" src={value} alt="" /> : <span className="admin-table-avatar admin-avatar-placeholder">{(record.fullName || record.name || '•').slice(0, 1)}</span>
   if (key === 'enabled' || key === 'verified') return <StatusBadge value={value ? (key === 'verified' ? 'Verified' : 'Active') : 'Inactive'} />
   if (key === 'status' || key === 'paymentStatus') return <StatusBadge value={value} />
-  if (key === 'providerId') return database.providers.find((provider) => provider.id === value)?.fullName || value || '—'
+  if (key === 'providerIds') {
+    const providerIds = Array.isArray(value) ? value : record.providerId ? [record.providerId] : []
+    const providers = providerIds.map((id) => database.providers.find((provider) => provider.id === id) || { id, fullName: id })
+    return <ProviderAvatarStack providers={providers} />
+  }
+  if (key === 'providerId') return database.providers.find((provider) => provider.id === value)?.fullName || record.providerName || value || '—'
   if (key === 'employeeId') return database.employees.find((employee) => employee.id === value)?.fullName || value || '—'
-  if (key === 'serviceId') return database.services.find((service) => service.id === value)?.title || value || '—'
+  if (key === 'serviceId') return database.services.find((service) => service.id === value)?.title || record.serviceTitle || value || '—'
   if (key === 'startingPrice' || key === 'amount') return value === undefined || value === '' ? '—' : `₹${Number(value).toLocaleString('en-IN')}`
   if (key === 'rating') return value ? <span className="admin-rating">★ {value}</span> : '—'
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
@@ -481,11 +497,65 @@ function StatusBadge({ value }) {
   return <span className={`admin-status-badge ${tone}`}>{status}</span>
 }
 
+function MultiSelectField({ field, options, value, onChange }) {
+  const selectedProviders = options
+    .filter((option) => value.includes(option.value))
+    .map((option) => ({ id: option.value, fullName: option.label, profileImage: option.image }))
+
+  function toggleOption(optionValue) {
+    onChange(
+      value.includes(optionValue)
+        ? value.filter((item) => item !== optionValue)
+        : [...value, optionValue],
+    )
+  }
+
+  return (
+    <fieldset className="admin-form-field admin-form-multi-select wide">
+      <legend>{field.label}</legend>
+      <div className="admin-multi-select-selection">
+        <span>{selectedProviders.length} selected</span>
+        <ProviderAvatarStack providers={selectedProviders} />
+      </div>
+      <div className="admin-multi-select-options">
+        {options.length
+          ? options.map((option) => (
+            <label key={option.value}>
+              <input
+                type="checkbox"
+                checked={value.includes(option.value)}
+                onChange={() => toggleOption(option.value)}
+              />
+              <ProviderAvatar name={option.label} image={option.image} size="small" />
+              <span>{option.label}</span>
+            </label>
+          ))
+          : <p>No approved or active providers are available.</p>}
+      </div>
+    </fieldset>
+  )
+}
+
 function RecordForm({ config, record, database, onClose, onSave }) {
-  const initial = Object.fromEntries(config.fields.map((field) => [
-    field.name,
-    record?.[field.name] ?? (field.type === 'checkbox' ? field.name === 'enabled' : ''),
-  ]))
+  const initial = Object.fromEntries(config.fields.map((field) => {
+    let value = record?.[field.name]
+    if (field.name === 'serviceId' && !value && record?.serviceTitle) {
+      value = database.services.find((service) => service.title === record.serviceTitle)?.id
+    }
+    if (field.name === 'providerId' && !value && record?.providerName) {
+      value = database.providers.find((provider) => provider.fullName === record.providerName)?.id
+    }
+    if (field.type === 'multi-select' && !Array.isArray(value)) {
+      value = record?.providerId ? [record.providerId] : []
+    } else if (value === undefined || value === null) {
+      value = field.type === 'checkbox'
+        ? field.name === 'enabled'
+        : config.key === 'reviews' && field.name === 'status'
+          ? 'Pending review'
+          : ''
+    }
+    return [field.name, value]
+  }))
   const [draft, setDraft] = useState(initial)
   const [error, setError] = useState('')
 
@@ -512,7 +582,12 @@ function RecordForm({ config, record, database, onClose, onSave }) {
 
   function submit(event) {
     event.preventDefault()
-    const requiredField = config.fields.find((field) => field.required && !String(draft[field.name] ?? '').trim())
+    const requiredField = config.fields.find((field) => {
+      if (!field.required) return false
+      return Array.isArray(draft[field.name])
+        ? draft[field.name].length === 0
+        : !String(draft[field.name] ?? '').trim()
+    })
     if (requiredField) {
       setError(`${requiredField.label || requiredField.name} is required.`)
       return
@@ -524,8 +599,43 @@ function RecordForm({ config, record, database, onClose, onSave }) {
     if (field.options) return field.options.map((option) => ({ value: option, label: option }))
     const source = selectFields[field.name]?.options
     if (!source) return []
-    const rows = database[source] || []
-    return rows.map((item) => ({ value: item[selectFields[field.name].value], label: item[selectFields[field.name].text] }))
+    let rows = database[source] || []
+    if (field.name === 'providerIds') rows = rows.filter((item) => ['Approved', 'Active'].includes(item.status))
+    if (config.key === 'reviews' && field.name === 'providerId') {
+      const selectedService = database.services.find((service) => service.id === draft.serviceId)
+      const assignedProviderIds = Array.isArray(selectedService?.providerIds)
+        ? selectedService.providerIds
+        : selectedService?.providerId ? [selectedService.providerId] : []
+      rows = rows.filter((provider) => assignedProviderIds.includes(provider.id) && ['Approved', 'Active'].includes(provider.status))
+    }
+    return rows.map((item) => ({
+      value: item[selectFields[field.name].value],
+      label: item[selectFields[field.name].text],
+      image: field.name === 'providerIds' ? item.profileImage : '',
+    }))
+  }
+
+  function renderField(field) {
+    if (field.type === 'multi-select') {
+      return <MultiSelectField key={field.name} field={field} options={fieldOptions(field)} value={draft[field.name] || []} onChange={(value) => updateField(field.name, value)} />
+    }
+
+    return (
+      <label className={`admin-form-field${field.type === 'textarea' ? ' wide' : ''}${field.type === 'checkbox' ? ' checkbox-field' : ''}`} key={field.name}>
+        {field.type === 'checkbox'
+          ? <><input type="checkbox" checked={Boolean(draft[field.name])} onChange={(event) => updateField(field.name, event.target.checked)} /><span>{field.label}</span></>
+          : <>
+            {field.label || selectFields[field.name]?.label || field.name}
+            {field.type === 'select'
+              ? <select required={field.required} disabled={config.key === 'reviews' && field.name === 'providerId' && !draft.serviceId} value={draft[field.name] ?? ''} onChange={(event) => { updateField(field.name, event.target.value); if (config.key === 'reviews' && field.name === 'serviceId') updateField('providerId', '') }}><option value="">{config.key === 'reviews' && field.name === 'providerId' && !draft.serviceId ? 'Select a service first' : 'Select…'}</option>{fieldOptions(field).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+              : field.type === 'textarea'
+                ? <textarea required={field.required} rows="3" value={draft[field.name] ?? ''} onChange={(event) => updateField(field.name, event.target.value)} />
+                : field.type === 'image'
+                  ? <><input type="url" value={typeof draft[field.name] === 'string' && !draft[field.name].startsWith('data:') ? draft[field.name] : ''} onChange={(event) => updateField(field.name, event.target.value)} placeholder="Paste an image URL or upload a small image" /><input className="admin-file-input" type="file" accept="image/*" onChange={(event) => uploadImage(field.name, event)} />{draft[field.name] && <img className="admin-upload-preview" src={draft[field.name]} alt="Selected preview" />}</>
+                  : <input required={field.required} min={field.min} max={field.max} step={field.step} type={field.type || 'text'} value={draft[field.name] ?? ''} onChange={(event) => updateField(field.name, event.target.value)} /> }
+          </>}
+      </label>
+    )
   }
 
   return (
@@ -533,7 +643,7 @@ function RecordForm({ config, record, database, onClose, onSave }) {
       <section className="admin-form-modal" role="dialog" aria-modal="true" aria-labelledby="admin-form-title">
         <div className="admin-modal-header"><div><p className="admin-eyebrow">{record ? 'EDIT RECORD' : 'NEW RECORD'}</p><h2 id="admin-form-title">{record ? 'Update' : 'Add'} {config.singular}</h2></div><button type="button" aria-label="Close form" onClick={onClose}>×</button></div>
         <form onSubmit={submit}>
-          <div className="admin-form-grid">{config.fields.map((field) => <label className={`admin-form-field${field.type === 'textarea' ? ' wide' : ''}${field.type === 'checkbox' ? ' checkbox-field' : ''}`} key={field.name}>{field.type === 'checkbox' ? <><input type="checkbox" checked={Boolean(draft[field.name])} onChange={(event) => updateField(field.name, event.target.checked)} /><span>{field.label}</span></> : <>{field.label || selectFields[field.name]?.label || field.name}{field.type === 'select' ? <select required={field.required} value={draft[field.name] ?? ''} onChange={(event) => updateField(field.name, event.target.value)}><option value="">Select…</option>{fieldOptions(field).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === 'textarea' ? <textarea required={field.required} rows="3" value={draft[field.name] ?? ''} onChange={(event) => updateField(field.name, event.target.value)} /> : field.type === 'image' ? <><input type="url" value={typeof draft[field.name] === 'string' && !draft[field.name].startsWith('data:') ? draft[field.name] : ''} onChange={(event) => updateField(field.name, event.target.value)} placeholder="Paste an image URL or upload a small image" /><input className="admin-file-input" type="file" accept="image/*" onChange={(event) => uploadImage(field.name, event)} />{draft[field.name] && <img className="admin-upload-preview" src={draft[field.name]} alt="Selected preview" />}</> : <input required={field.required} type={field.type || 'text'} value={draft[field.name] ?? ''} onChange={(event) => updateField(field.name, field.type === 'number' ? event.target.value : event.target.value)} />}</>}</label>)}</div>
+          <div className="admin-form-grid">{config.fields.map(renderField)}</div>
           {error && <p className="admin-form-error" role="alert">{error}</p>}
           <div className="admin-form-actions"><button type="button" className="admin-secondary-button" onClick={onClose}>Cancel</button><button type="submit" className="admin-primary-button">{record ? 'Save changes' : 'Create'} <span>→</span></button></div>
           <p className="admin-form-demo-note">Demo only: this change is saved to local browser storage, not a server.</p>

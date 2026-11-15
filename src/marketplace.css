@@ -120,9 +120,7 @@
 .service-card-title-row h3 { margin: 0; font-size: 14px; font-weight: 700; }
 .rating { flex: 0 0 auto; color: #607066; font-size: 10px; font-weight: 700; }
 .rating > span { color: var(--market-yellow); }
-.service-provider-line { display: flex; align-items: center; gap: 7px; margin: 11px 0 14px; color: #69766d; font-size: 10px; }
-.service-provider-line img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
-.verified-mark { width: 13px; height: 13px; display: grid; place-items: center; border-radius: 50%; background: #e7f0e4; color: #4b7c54; font-size: 9px; font-weight: 800; }
+.service-provider-line { display: flex; align-items: center; min-height: 24px; margin: 11px 0 14px; }
 .service-card-bottom { display: flex; justify-content: space-between; padding-top: 11px; border-top: 1px solid #eff0ec; color: #89938b; font-size: 10px; }
 .service-card-bottom strong { color: var(--market-ink); font-size: 12px; }
 
@@ -237,6 +235,7 @@
 .provider-profile { padding: 20px; border: 1px solid #e5e9e1; border-radius: 6px; background: #fff; }
 .provider-profile-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .verified-pill { padding: 4px 7px; border-radius: 20px; background: #eef4e9; color: #587a52; font-size: 8px; font-weight: 700; }
+.provider-profile-entry + .provider-profile-entry { margin-top: 17px; padding-top: 17px; border-top: 1px solid var(--market-line); }
 .provider-profile-body { display: flex; align-items: center; gap: 13px; margin-top: 17px; }
 .provider-profile-body > img { width: 53px; height: 53px; border-radius: 50%; object-fit: cover; }
 .provider-profile-info { flex: 1; min-width: 0; }
@@ -251,11 +250,29 @@
 .review-row { display: flex; gap: 12px; padding: 18px; background: white; border: 1px solid #e7eae3; border-radius: 5px; }
 .review-row p { margin: 5px 0; color: var(--market-ink); font-family: Georgia,serif; font-size: 13px; }
 .review-row small { color: var(--market-muted); font-size: 9px; }
-.booking-card { position: sticky; top: 20px; padding: 21px; border: 1px solid #e5e9e1; border-radius: 6px; background: #fff; }
-.booking-card h3 { margin: 8px 0; font-size: 17px; }
-.booking-card p { font-size: 10px; }
-.booking-card .button { margin: 5px 0; }
-.booking-card > small { display: block; margin-top: 10px; color: var(--market-muted); font-size: 9px; }
+.review-empty { padding: 14px; color: var(--market-muted); font-size: 10px; }
+.review-submit-block { margin-top: 21px; padding: 20px; border: 1px solid #e5e9e1; border-radius: 6px; background: #fff; }
+.review-submit-block h2 { margin: 7px 0; font-size: 20px; }
+.review-submit-block > p { font-size: 10px; }
+.review-submit-form { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-top: 15px; }
+.review-submit-form > label { display: grid; gap: 5px; color: var(--market-ink); font-size: 10px; font-weight: 650; }
+.review-submit-form input, .review-submit-form select, .review-submit-form textarea { width: 100%; min-height: 37px; padding: 8px; border: 1px solid var(--market-line); border-radius: 4px; background: var(--market-surface); color: var(--market-ink); font: inherit; font-size: 10px; }
+.review-submit-form textarea { resize: vertical; }
+.review-rating-field { min-width: 0; margin: 0; padding: 0; border: 0; }
+.review-rating-field legend { margin-bottom: 5px; color: var(--market-ink); font-size: 10px; font-weight: 650; }
+.review-rating-options { display: flex; align-items: center; gap: 3px; min-height: 37px; }
+.review-rating-options label { position: relative; cursor: pointer; color: #c8cec7; font-size: 22px; line-height: 1; }
+.review-rating-options label.selected { color: #bb8b45; }
+.review-rating-options input { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
+.review-rating-options input:focus-visible + span { outline: 2px solid var(--market-green); outline-offset: 2px; }
+.review-submit-form > .button { justify-self: start; }
+.review-form-note, .review-submit-notice { grid-column: 1/-1; margin: 0; color: var(--market-muted); font-size: 9px; }
+.review-submit-notice { color: var(--market-green); }
+.direct-contact-card { position: sticky; top: 20px; padding: 21px; border: 1px solid #e5e9e1; border-radius: 6px; background: #fff; }
+.direct-contact-card h3 { margin: 8px 0; font-size: 17px; }
+.direct-contact-card > p { font-size: 10px; }
+.direct-contact-card .button { margin: 8px 0; }
+.direct-contact-card > small { display: block; color: var(--market-muted); font-size: 9px; }
 
 .standard-content { max-width: 1172px; margin: 0 auto; padding: 58px 0 90px; }
 .about-intro { max-width: 760px; margin: 0 auto 47px; text-align: center; }
@@ -398,8 +415,7 @@
   .service-card-title-row { flex-direction: column-reverse; gap: 3px; }
   .service-card-title-row h3 { font-size: 12px; }
   .service-card-title-row .rating { font-size: 9px; }
-  .service-provider-line { margin: 6px 0 8px; font-size: 8px; }
-  .service-provider-line img { width: 18px; height: 18px; }
+  .service-provider-line { margin: 6px 0 8px; }
   .service-card-bottom { padding-top: 7px; font-size: 8px; }
   .service-card-bottom strong { font-size: 10px; }
   .trust-band { padding: 54px 20px; }
@@ -465,7 +481,10 @@
   .detail-facts small { font-size: 9px; }
   .provider-profile { padding: 15px; }
   .provider-actions .button { flex: 1; padding: 0 8px; }
-  .booking-card { position: static; }
+  .review-submit-block { padding: 15px; }
+  .review-submit-form { grid-template-columns: 1fr; }
+  .review-form-note, .review-submit-notice { grid-column: 1; }
+  .direct-contact-card { position: static; }
   .standard-content { padding: 39px 0 58px; }
   .about-intro { margin-bottom: 30px; }
   .about-intro h2 { font-size: 25px; }
@@ -537,7 +556,7 @@
 .dark .hero-art-note > span:last-child, .dark .hero-caption { color: var(--market-body); }
 .dark .hero-art-stamp { border-color: #e5c7a8; background: #a9553c; }
 .dark .service-card, .dark .step-card, .dark .testimonial-card,
-.dark .provider-profile, .dark .booking-card, .dark .review-row, .dark .mission-grid article,
+.dark .provider-profile, .dark .direct-contact-card, .dark .review-row, .dark .review-submit-block, .dark .mission-grid article,
 .dark .form-card, .dark .filter-bar, .dark .empty-state {
   border-color: var(--market-line);
   background: var(--market-surface);
@@ -564,7 +583,6 @@
   background: #354a3e;
   color: #d5dfc2 !important;
 }
-.dark .verified-mark { background: #40574c; color: #d5dfc2; }
 .dark .auth-notice { background: #493b34; color: #f2c8b0 !important; }
 .dark .stats-row strong { color: #e1b080; }
 

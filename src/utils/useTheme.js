@@ -1,26 +1,25 @@
 import { useEffect, useState } from 'react'
 
-const THEME_STORAGE_KEY = 'nishin-ideas-theme'
+const DARK_MODE_QUERY = '(prefers-color-scheme: dark)'
 
-function getInitialTheme() {
-  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-
-  if (savedTheme === 'light' || savedTheme === 'dark') {
-    return savedTheme
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light'
+function getSystemTheme() {
+  return window.matchMedia(DARK_MODE_QUERY).matches ? 'dark' : 'light'
 }
 
 function useTheme() {
-  const [theme, setTheme] = useState(getInitialTheme)
+  const [theme, setTheme] = useState(getSystemTheme)
+
+  useEffect(() => {
+    const colorScheme = window.matchMedia(DARK_MODE_QUERY)
+    const syncTheme = (event) => setTheme(event.matches ? 'dark' : 'light')
+    colorScheme.addEventListener('change', syncTheme)
+    return () => colorScheme.removeEventListener('change', syncTheme)
+  }, [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
     document.documentElement.style.colorScheme = theme
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+
   }, [theme])
 
   const toggleTheme = () => {

@@ -7,6 +7,13 @@ let snapshot
 
 const slugify = (value) => String(value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
+function getAverageReviewRating(reviews, fallback) {
+  const ratings = reviews
+    .map((review) => Number(review.rating))
+    .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5)
+  return ratings.length ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1) : fallback
+}
+
 function makeSeedData() {
   const providersByName = new Map()
   seedServices.forEach((service, index) => {
@@ -41,7 +48,7 @@ function makeSeedData() {
     duration: '1–2 hours',
     locations: service.provider.area,
     requirements: 'Discuss the work with the provider before confirming.',
-    providerId: slugify(service.provider.name),
+    providerIds: [slugify(service.provider.name)],
     enabled: true,
     rating: service.rating,
     reviewCount: service.reviews,
@@ -67,9 +74,9 @@ function makeSeedData() {
       { id: 'CUS-3003', fullName: 'Divya M.', email: 'divya@example.demo', phone: '+91 98430 10003', location: 'Tiruppur', address: 'Avinashi Road, Tiruppur', joined: '2026-01-21', bookings: 2, status: 'Active' },
     ],
     reviews: [
-      { id: 'REV-501', customerName: 'Priya S.', serviceTitle: 'Electrician', providerName: 'Arun Kumar', rating: 5, comment: 'On time, explained the repair clearly, and left everything tidy.', date: '2026-11-12', status: 'Published' },
-      { id: 'REV-500', customerName: 'Ramesh K.', serviceTitle: 'Coconut Tree Climbing', providerName: 'Meena Services', rating: 5, comment: 'Very experienced and careful work. Harvest was done quickly.', date: '2026-11-10', status: 'Published' },
-      { id: 'REV-499', customerName: 'Divya M.', serviceTitle: 'Homemade Food', providerName: 'Anu’s Kitchen', rating: 4, comment: 'Delicious food and generous portions for our family.', date: '2026-11-08', status: 'Pending review' },
+      { id: 'REV-501', customerName: 'Priya S.', serviceId: 'electrician', serviceTitle: 'Electrician', providerId: 'arun-kumar', providerName: 'Arun Kumar', rating: 5, comment: 'On time, explained the repair clearly, and left everything tidy.', date: '2026-11-12', status: 'Published' },
+      { id: 'REV-500', customerName: 'Ramesh K.', serviceId: 'coconut-tree-climbing', serviceTitle: 'Coconut Tree Climbing', providerId: 'karthik-works', providerName: 'Karthik Works', rating: 5, comment: 'Very experienced and careful work. Harvest was done quickly.', date: '2026-11-10', status: 'Published' },
+      { id: 'REV-499', customerName: 'Divya M.', serviceId: 'homemade-food', serviceTitle: 'Homemade Food', providerId: 'anu-s-kitchen', providerName: 'Anu’s Kitchen', rating: 4, comment: 'Delicious food and generous portions for our family.', date: '2026-11-08', status: 'Pending review' },
     ],
     locations: [
       { id: 'LOC-01', state: 'Tamil Nadu', district: 'Coimbatore', town: 'Coimbatore', areas: 'Race Course, Saibaba Colony, RS Puram', enabled: true },
@@ -81,7 +88,7 @@ function makeSeedData() {
       { id: 'CMS-02', section: 'About us', title: 'Good things grow close to home.', body: 'We connect neighbors with skilled local professionals.', image: '', enabled: true },
       { id: 'CMS-03', section: 'Footer contact', title: 'Get in touch', body: 'hello@namma.example · +91 422 400 0123', image: '', enabled: true },
       { id: 'CMS-04', section: 'FAQ', title: 'How do I find a service provider?', body: 'Search for the service you need, filter by location or price, and explore local provider profiles.', enabled: true },
-      { id: 'CMS-05', section: 'FAQ', title: 'How do I book a service?', body: 'There is no in-app booking at this time. Contact the provider directly to discuss the job, availability, pricing, and arrangements.', enabled: true },
+      { id: 'CMS-05', section: 'FAQ', title: 'How do I contact a provider?', body: 'Open a service, choose a listed provider, and call or message them directly to discuss the job, availability, pricing, and arrangements.', enabled: true },
       { id: 'CMS-06', section: 'Testimonial', title: 'Priya S. | Coimbatore', body: 'Finding a reliable electrician used to take half a day of asking around. Thumbly.in made it three clicks.', enabled: true },
       { id: 'CMS-07', section: 'Testimonial', title: 'Ramesh K. | Pollachi', body: 'Our coconut harvest was sorted in an afternoon. Such a relief to find skilled local people nearby.', enabled: true },
       { id: 'CMS-08', section: 'Testimonial', title: 'Divya M. | Tiruppur', body: 'A genuinely lovely home-cooked lunch for our family gathering. I’ve already recommended the caterer.', enabled: true },
@@ -145,28 +152,72 @@ export function useAdminDemoData() {
 export function getPublicCatalog(database = getAdminDemoData()) {
   const publicServices = database.services
     .filter((service) => {
-      const provider = database.providers.find((item) => item.id === service.providerId)
-      const providerIsAvailable = !service.providerId || (provider && ['Approved', 'Active'].includes(provider.status))
-      return service.enabled && providerIsAvailable
+      const providerIds = Array.isArray(service.providerIds)
+        ? service.providerIds
+        : service.providerId ? [service.providerId] : []
+      const availableProviders = providerIds.filter((providerId) => {
+        const provider = database.providers.find((item) => item.id === providerId)
+        return provider && ['Approved', 'Active'].includes(provider.status)
+      })
+      return service.enabled && (!providerIds.length || availableProviders.length > 0)
     })
     .map((service) => {
-      const provider = database.providers.find((item) => item.id === service.providerId)
-      const providerName = provider?.fullName || service.providerName || 'Local provider'
-      const providerArea = service.locations || provider?.location || 'Local area'
+      const providerIds = Array.isArray(service.providerIds)
+        ? service.providerIds
+        : service.providerId ? [service.providerId] : []
+      const providers = providerIds
+        .map((providerId) => database.providers.find((item) => item.id === providerId))
+        .filter((provider) => provider && ['Approved', 'Active'].includes(provider.status))
+      const serviceReviews = (database.reviews || []).filter((review) => (
+        review.status === 'Published' &&
+        (review.serviceId ? review.serviceId === service.id : review.serviceTitle === service.title)
+      ))
       const image = service.images || service.image || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=900&q=85'
+      const publicProviders = providers.length
+        ? providers.map((provider) => {
+          const providerReviews = serviceReviews.filter((review) => (
+            review.providerId ? review.providerId === provider.id : review.providerName === provider.fullName
+          ))
+          return {
+            id: provider.id,
+            name: provider.fullName,
+            phone: provider.phone || '',
+            experience: provider.experience || 'Local professional',
+            area: service.locations || provider.location || 'Local area',
+            image: provider.profileImage || image,
+            rating: getAverageReviewRating(providerReviews, provider.rating || service.rating),
+            reviewCount: Number(provider.reviewCount || service.reviewCount || 0) +
+              providerReviews.filter((review) => review.submittedByCustomer).length,
+          }
+        })
+        : (() => {
+          const providerId = service.providerId || service.id
+          const providerName = service.providerName || 'Local provider'
+          const providerReviews = serviceReviews.filter((review) => (
+            review.providerId ? review.providerId === providerId : review.providerName === providerName
+          ))
+          return [{
+            id: providerId,
+            name: providerName,
+            phone: service.providerPhone || '',
+            experience: 'Local professional',
+            area: service.locations || 'Local area',
+            image: service.providerImage || image,
+            rating: getAverageReviewRating(providerReviews, service.rating),
+            reviewCount: Number(service.reviewCount || 0) +
+              providerReviews.filter((review) => review.submittedByCustomer).length,
+          }]
+        })()
+      const serviceRating = getAverageReviewRating(serviceReviews, providers[0]?.rating || service.rating || 'New')
       return {
         slug: service.id,
         name: service.title || 'Local service',
         description: service.description || 'Contact a local professional to discuss this service.',
-        provider: {
-          name: providerName,
-          phone: provider?.phone || service.providerPhone || '',
-          experience: provider?.experience || 'Local professional',
-          area: providerArea,
-          image: provider?.profileImage || service.providerImage || image,
-        },
-        rating: provider?.rating || service.rating || 'New',
-        reviews: Number(provider?.reviewCount || service.reviewCount || 0),
+        providers: publicProviders,
+        provider: publicProviders[0],
+        rating: serviceRating,
+        reviews: Number(service.reviewCount || providers[0]?.reviewCount || 0) +
+          serviceReviews.filter((review) => review.submittedByCustomer).length,
         price: Number(service.startingPrice || service.price || 0),
         image,
       }

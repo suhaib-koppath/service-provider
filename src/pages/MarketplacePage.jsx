@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import MarketplaceLayout from '../components/MarketplaceLayout.jsx'
-import { getPublicCatalog, useAdminDemoData } from '../data/adminDemoStore.js'
+import ProviderAvatarStack from '../components/ProviderAvatarStack.jsx'
+import { getPublicCatalog, makeDemoId, saveAdminDemoData, useAdminDemoData } from '../data/adminDemoStore.js'
 import '../marketplace.css'
 
 const testimonials = [
@@ -35,10 +36,9 @@ function ServiceCard({ service }) {
           <Link to={`/services/${service.slug}`}><h3>{service.name}</h3></Link>
           <span className="rating"><span aria-hidden="true">★</span> {service.rating}</span>
         </div>
-        <p className="service-provider-line">
-          <img src={service.provider.image} alt="" loading="lazy" />
-          {service.provider.name} <span className="verified-mark" title="Local provider">✓</span>
-        </p>
+        <div className="service-provider-line">
+          <ProviderAvatarStack providers={service.providers} size="small" />
+        </div>
         <div className="service-card-bottom">
           <span>From <strong>₹{service.price.toLocaleString('en-IN')}</strong></span>
           <span>{service.provider.area}</span>
@@ -158,8 +158,9 @@ function ServicesPage() {
   const [sort, setSort] = useState('popular')
   const filtered = useMemo(() => {
     let result = services.filter((service) => {
-      const matchesQuery = `${service.name} ${service.provider.name}`.toLowerCase().includes(query.trim().toLowerCase())
-      const matchesLocation = !location || service.provider.area.toLowerCase().includes(location.trim().toLowerCase())
+      const providerNames = service.providers.map((provider) => provider.name).join(' ')
+      const matchesQuery = `${service.name} ${providerNames}`.toLowerCase().includes(query.trim().toLowerCase())
+      const matchesLocation = !location || service.providers.some((provider) => provider.area.toLowerCase().includes(location.trim().toLowerCase()))
       const matchesPrice = !maxPrice || service.price <= Number(maxPrice)
       return matchesQuery && matchesLocation && matchesPrice
     })
@@ -208,24 +209,104 @@ function DetailPage() {
   const database = useAdminDemoData()
   const { services } = useMemo(() => getPublicCatalog(database), [database])
   const service = services.find((item) => item.slug === slug)
+  const [reviewCustomerName, setReviewCustomerName] = useState('')
+  const [reviewProviderId, setReviewProviderId] = useState('')
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewNotice, setReviewNotice] = useState('')
   if (!service) return <NotFoundPage />
-  const phoneDigits = service.provider.phone.replace(/\D/g, '')
-  const whatsappMessage = encodeURIComponent(`Hi ${service.provider.name}, I found your ${service.name} service on Thumbly.in. Are you available?`)
+  const serviceAreas = [...new Set(service.providers.map((provider) => provider.area))].join(', ')
+  const publishedReviews = (database.reviews || []).filter((review) => (
+    review.status === 'Published' &&
+    (review.serviceId ? review.serviceId === service.slug : review.serviceTitle === service.name)
+  ))
+
+  function submitReview(event) {
+    event.preventDefault()
+    const provider = service.providers.find((item) => item.id === reviewProviderId)
+    if (!provider || !reviewRating) {
+      setReviewNotice('Choose a provider and rating before submitting your review.')
+      return
+    }
+
+    const review = {
+      id: makeDemoId('REV', service.name),
+      customerName: reviewCustomerName.trim(),
+      serviceId: service.slug,
+      serviceTitle: service.name,
+      providerId: provider.id,
+      providerName: provider.name,
+      rating: Number(reviewRating),
+      comment: reviewComment.trim(),
+      date: new Date().toISOString().slice(0, 10),
+      status: 'Pending review',
+      submittedByCustomer: true,
+    }
+
+    try {
+      saveAdminDemoData({ ...database, reviews: [review, ...(database.reviews || [])] })
+      setReviewCustomerName('')
+      setReviewProviderId('')
+      setReviewRating(0)
+      setReviewComment('')
+      setReviewNotice('Thanks! Your review was submitted and is waiting for approval.')
+    } catch (error) {
+      console.error('Could not save the customer review.', error)
+      setReviewNotice('Could not save your review in this browser. Please try again.')
+    }
+  }
 
   return (
     <div className="detail-page">
       <div className="detail-container">
         <div className="breadcrumbs"><Link to="/home">Home</Link><span>/</span><Link to="/services">Services</Link><span>/</span><span>{service.name}</span></div>
-        <div className="detail-heading"><div><span className="eyebrow">LOCAL SERVICE</span><h1>{service.name}</h1><div className="detail-rating"><span>★ {service.rating}</span><span>({service.reviews} neighbor reviews)</span><span>·</span><span>{service.provider.area}</span></div></div><span className="detail-price">From <strong>₹{service.price.toLocaleString('en-IN')}</strong></span></div>
+        <div className="detail-heading"><div><span className="eyebrow">LOCAL SERVICE</span><h1>{service.name}</h1><div className="detail-rating"><span>★ {service.rating}</span><span>({service.reviews} neighbor reviews)</span><span>·</span><span>{serviceAreas}</span></div></div><span className="detail-price">From <strong>₹{service.price.toLocaleString('en-IN')}</strong></span></div>
         <div className="detail-photo"><img src={service.image} alt={`${service.name} service`} /><span className="photo-caption">Local know-how, right around the corner.</span></div>
         <div className="detail-columns">
           <section className="detail-main">
-            <span className="eyebrow">THE SERVICE</span><h2>Good work, done with care.</h2><p>{service.description} Every job is a little different, so reach out to the provider to talk through your needs and get a quote.</p>
-            <div className="detail-facts"><div><span aria-hidden="true">◷</span><div><strong>Working hours</strong><small>Mon – Sat, 8:00 am – 7:00 pm</small></div></div><div><span aria-hidden="true">⌖</span><div><strong>Service area</strong><small>{service.provider.area} and nearby areas</small></div></div><div><span aria-hidden="true">✓</span><div><strong>Experience</strong><small>{service.provider.experience} of hands-on experience</small></div></div></div>
-            <div className="provider-profile"><div className="provider-profile-heading"><span className="eyebrow">YOUR LOCAL PROFESSIONAL</span><span className="verified-pill">✓ Local provider</span></div><div className="provider-profile-body"><img src={service.provider.image} alt={service.provider.name} /><div className="provider-profile-info"><h3>{service.provider.name}</h3><p>{service.name} · {service.provider.experience}</p><span>Serving {service.provider.area} and nearby neighborhoods</span></div><span className="rating"><span aria-hidden="true">★</span> {service.rating}</span></div><p className="provider-description">Friendly, experienced, and committed to doing the job right. Contact directly to discuss availability and get a quote for your specific requirements.</p><div className="provider-actions"><a className="button button-primary" href={`tel:${service.provider.phone}`}>Call provider <span aria-hidden="true">↗</span></a><a className="button button-whatsapp" href={`https://wa.me/${phoneDigits}?text=${whatsappMessage}`} target="_blank" rel="noreferrer">WhatsApp <span aria-hidden="true">↗</span></a></div></div>
-            <section className="reviews-block"><span className="eyebrow">FROM THE NEIGHBORHOOD</span><h2>Neighbors say</h2><div className="review-row"><span className="review-avatar">PS</span><div><div className="testimonial-stars">★★★★★</div><p>“Friendly, punctual, and did a great job. Would definitely call again.”</p><small>Priya S. · Verified neighbor</small></div></div></section>
+            <span className="eyebrow">THE SERVICE</span><h2>Good work, done with care.</h2><p>{service.description} Every job is a little different, so reach out to one of the listed providers to talk through your needs and get a quote.</p>
+            <div className="detail-facts"><div><span aria-hidden="true">◷</span><div><strong>Working hours</strong><small>Mon – Sat, 8:00 am – 7:00 pm</small></div></div><div><span aria-hidden="true">⌖</span><div><strong>Service areas</strong><small>{serviceAreas} and nearby areas</small></div></div><div><span aria-hidden="true">✓</span><div><strong>Listed providers</strong><small>{service.providers.length} available for this service</small></div></div></div>
+            <div className="provider-profile" id="service-providers"><div className="provider-profile-heading"><span className="eyebrow">LOCAL PROFESSIONALS</span><span className="verified-pill">{service.providers.length} available</span></div>{service.providers.map((provider) => {
+              const providerPhoneDigits = provider.phone.replace(/\D/g, '')
+              const providerMessage = encodeURIComponent(`Hi ${provider.name}, I found your ${service.name} service on Thumbly.in. Are you available?`)
+              return <div className="provider-profile-entry" key={provider.id}><div className="provider-profile-body"><img src={provider.image} alt={provider.name} /><div className="provider-profile-info"><h3>{provider.name}</h3><p>{service.name} · {provider.experience}</p><span>Serving {provider.area} and nearby neighborhoods</span></div><span className="rating"><span aria-hidden="true">★</span> {provider.rating || service.rating}</span></div><p className="provider-description">Friendly, experienced, and committed to doing the job right. Contact directly to discuss availability and get a quote for your specific requirements.</p><div className="provider-actions">{provider.phone && <a className="button button-primary" href={`tel:${provider.phone}`}>Call provider <span aria-hidden="true">↗</span></a>}{providerPhoneDigits && <a className="button button-whatsapp" href={`https://wa.me/${providerPhoneDigits}?text=${providerMessage}`} target="_blank" rel="noreferrer">Message provider <span aria-hidden="true">↗</span></a>}{!provider.phone && <small>Contact details unavailable</small>}</div></div>
+            })}</div>
+            <section className="reviews-block">
+              <span className="eyebrow">FROM THE NEIGHBORHOOD</span><h2>Neighbors say</h2>
+              {publishedReviews.length
+                ? publishedReviews.map((review) => {
+                  const rating = Math.max(0, Math.min(5, Math.round(Number(review.rating) || 0)))
+                  return <div className="review-row" key={review.id}><span className="review-avatar">{review.customerName?.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase() || 'N'}</span><div><div className="testimonial-stars" aria-label={`${rating} out of 5 stars`}>{'★'.repeat(rating)}{'☆'.repeat(5 - rating)}</div><p>“{review.comment}”</p><small>{review.customerName} · {review.providerName || 'Local provider'}</small></div></div>
+                })
+                : <p className="review-empty">No published reviews yet. Be the first to share your experience.</p>}
+            </section>
+            <section className="review-submit-block">
+              <span className="eyebrow">SHARE YOUR EXPERIENCE</span>
+              <h2>Rate a provider</h2>
+              <p>Choose the provider who helped you, leave a rating, and share a few words about your experience.</p>
+              <form className="review-submit-form" onSubmit={submitReview}>
+                <label>Your name<input autoComplete="name" required value={reviewCustomerName} onChange={(event) => setReviewCustomerName(event.target.value)} /></label>
+                <label>Provider<select required value={service.providers.some((provider) => provider.id === reviewProviderId) ? reviewProviderId : ''} onChange={(event) => setReviewProviderId(event.target.value)}><option value="">Select a provider…</option>{service.providers.map((provider) => <option value={provider.id} key={provider.id}>{provider.name}</option>)}</select></label>
+                <fieldset className="review-rating-field">
+                  <legend>Your rating</legend>
+                  <div className="review-rating-options" role="radiogroup" aria-label="Rating from one to five stars">
+                    {[1, 2, 3, 4, 5].map((rating) => <label className={reviewRating >= rating ? 'selected' : ''} key={rating}><input type="radio" name="customer-review-rating" value={rating} required={rating === 1} checked={reviewRating === rating} onChange={() => setReviewRating(rating)} /><span aria-hidden="true">★</span><span className="sr-only">{rating} stars</span></label>)}
+                  </div>
+                </fieldset>
+                <label className="review-comment-field">Your review<textarea required minLength={5} rows="4" value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} /></label>
+                <button className="button button-primary" type="submit">Submit review</button>
+                <p className="review-form-note">Reviews are saved in this browser demo and appear publicly after admin approval.</p>
+                {reviewNotice && <p className="review-submit-notice" role="status">{reviewNotice}</p>}
+              </form>
+            </section>
           </section>
-          <aside className="booking-card"><span className="eyebrow">NEED A HAND?</span><h3>Talk to a local pro.</h3><p>Get in touch to check availability, ask a question, or request a quote.</p><a className="button button-primary button-full" href={`tel:${service.provider.phone}`}>Call {service.provider.name.split(' ')[0]}</a><a className="button button-whatsapp button-full" href={`https://wa.me/${phoneDigits}?text=${whatsappMessage}`} target="_blank" rel="noreferrer">Message on WhatsApp</a><small>No booking fees. Discuss the job directly with your provider.</small></aside>
+          <aside className="direct-contact-card">
+            <span className="eyebrow">CONTACT DIRECTLY</span>
+            <h3>Talk to a provider</h3>
+            <p>Choose someone from the list and contact them directly to discuss availability and pricing.</p>
+            <a className="button button-primary button-full" href="#service-providers">View providers <span aria-hidden="true">↓</span></a>
+            <small>No booking through the marketplace.</small>
+          </aside>
         </div>
       </div>
     </div>
@@ -261,7 +342,7 @@ function ProviderPage() {
 function FAQPage() {
   const database = useAdminDemoData()
   const managedQuestions = database.content.filter((item) => item.section === 'FAQ' && item.enabled).map((item) => [item.title, item.body])
-  const questions = managedQuestions.length ? managedQuestions : [['How do I find a service provider?', 'Search the directory for local help.'], ['How do I book a service?', 'Contact a provider directly to discuss availability and pricing.']]
+  const questions = managedQuestions.length ? managedQuestions : [['How do I find a service provider?', 'Search the directory for local help.'], ['How do I contact a provider?', 'Open a service, choose a listed provider, and call or message them directly.']]
   return <InfoPage eyebrow="A FEW HELPFUL ANSWERS" title="Good to know." intro="A few quick answers to help you get started." ><div className="faq-list">{questions.map(([question, answer]) => <details key={question}><summary>{question}<span aria-hidden="true">+</span></summary><p>{answer}</p></details>)}</div></InfoPage>
 }
 
